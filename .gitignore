@@ -1,0 +1,8 @@
+.DS_Store
+.env
+env/
+.Rhistory
+node_modules
+__pycache__
+data
+.vscode/
