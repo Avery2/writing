@@ -91,4 +91,4 @@ AGENTS.md             Durable instructions for coding agents
 
 ## Relationship to the portfolio
 
-The writing site is visually related to the portfolio but independently owned. `styles/portfolio-foundation.css` contains the small token/reset contract it needs. Avoid importing the portfolio's complete CSS or moving writing compilation back into the portfolio repository. The writing Pages artifact owns every route beneath `/writing/`, including experience and education. The portfolio only curates links to selected writing routes.
+The writing site is visually related to the portfolio but independently owned. `styles/portfolio-foundation.css` contains the small token/reset contract it needs. Avoid importing the portfolio's complete CSS or moving writing compilation back into the portfolio repository. The writing Pages artifact owns every route beneath `/writing/`, including experience and education. The portfolio curates entry points and generates project README nodes under `/projects/`; those pages reuse the shared stack runtime with a portfolio-owned project corpus.

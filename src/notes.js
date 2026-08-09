@@ -1,7 +1,7 @@
 import { initTheme } from '../assets/theme.js';
-import { noteBySlug } from './corpus.generated.mjs';
 
 const app = document.querySelector('#notes-app');
+const { noteBySlug } = await import(app?.dataset.corpus || './corpus.generated.mjs');
 const initialSlug = app?.dataset.initialNote;
 const enteredFromPortfolio = new URL(location.href).searchParams.get('from') === 'portfolio';
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -164,11 +164,14 @@ function render({ focus = false, announce = true } = {}) {
   viewportEl.scrollLeft = Math.max(0, active.offset + active.width - viewportEl.clientWidth);
   const activeDocument = noteBySlug.get(active.noteId);
   const resumeDocument = ['resume', 'experience', 'education'].includes(activeDocument.kind);
-  document.title = `${activeDocument.title} — ${resumeDocument ? 'Résumé' : 'Notes'} — Avery`;
+  const projectDocument = activeDocument.kind === 'project' || activeDocument.kind === 'projects';
+  const sectionTitle = resumeDocument ? 'Résumé' : projectDocument ? 'Projects' : 'Notes';
+  document.title = `${activeDocument.title} — ${sectionTitle} — Avery`;
   const sectionLink = document.querySelector('.notes-home');
   if (sectionLink) {
-    sectionLink.href = resumeDocument ? noteBySlug.get('resume').url : noteBySlug.get('notes').url;
-    sectionLink.textContent = resumeDocument ? 'Résumé' : 'Notes';
+    const sectionRoot = resumeDocument ? 'resume' : projectDocument ? 'projects' : 'notes';
+    sectionLink.href = noteBySlug.get(sectionRoot).url;
+    sectionLink.textContent = sectionTitle;
   }
   if (focus) (trackEl.querySelector('.stack-pane--active h1') || trackEl.querySelector('.stack-pane--expanded h1'))?.focus({ preventScroll: true });
   if (announce) announcePath();
@@ -205,10 +208,15 @@ function articleHTML(note) {
     : linkify(note.body);
   const sourceURL = `https://github.com/Avery2/writing/blob/main/${note.source_path}`;
   const isResumeDocument = ['resume', 'experience', 'education'].includes(note.kind);
+  const isProjectDocument = ['project', 'projects'].includes(note.kind);
   const backLink = enteredFromPortfolio && note.slug === initialSlug ? `<a class="content-back-link" href="/">← Back to portfolio</a>` : '';
-  const kicker = note.root_note ? 'About these notes' : isResumeDocument ? note.kind : 'Note';
+  const kicker = note.root_note ? 'About these notes' : isResumeDocument || isProjectDocument ? note.kind : 'Note';
   const meta = isResumeDocument && note.kind !== 'resume' ? `<div class="resume-meta"><span>${note.dates || ''}</span><span>${note.location || ''}</span>${note.detail ? `<span>${note.detail}</span>` : ''}</div>` : '';
-  return `<article class="note-article" data-note="${note.slug}">${backLink}<header class="note-header"><div class="note-kicker">${kicker} ${status}</div><h1 tabindex="-1">${note.title}</h1><p class="note-summary">${note.summary}</p>${meta}${warning}</header><div class="note-body">${body}${note.related_html || ''}</div><footer class="writing-source">Generated from <a href="${sourceURL}">Markdown source on GitHub</a>.</footer></article>`;
+  const projectMeta = isProjectDocument ? `${note.project_stats_html || ''}${note.project_actions_html || ''}` : '';
+  const provenance = isProjectDocument
+    ? `<footer class="writing-source">${note.provenance_html || `README synced from <a href="${note.repo_url || 'https://github.com/Avery2'}">GitHub</a>${note.synced_on ? ` on ${note.synced_on}` : ''}.`}</footer>`
+    : `<footer class="writing-source">Generated from <a href="${sourceURL}">Markdown source on GitHub</a>.</footer>`;
+  return `<article class="note-article" data-note="${note.slug}">${backLink}<header class="note-header"><div class="note-kicker">${kicker} ${status}</div><h1 tabindex="-1">${note.title}</h1><p class="note-summary">${note.summary}</p>${meta}${warning}${projectMeta}</header><div class="note-body">${body}${note.related_html || ''}</div>${provenance}</article>`;
 }
 
 function linkify(body = '') {

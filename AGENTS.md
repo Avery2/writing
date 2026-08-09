@@ -16,6 +16,7 @@ This repository owns Avery's Markdown corpus, note graph, writing compiler, link
 - `writing.config.json` is the single source for the landing/root note and compatibility redirects.
 - Experience and education sources live here and retain their stable `/writing/experience/` and `/writing/education/` routes; the portfolio may link to them but must not generate their HTML.
 - Experience, education, and the résumé overview are first-class graph nodes rendered by the stacked reading runtime, not a separate page family. Preserve that shared behavior when adding metadata or layouts.
+- The portfolio’s generated project pages reuse `src/notes.js` with their own declared project corpus. Keep the runtime corpus-selectable; project README fetching and project-node generation remain portfolio responsibilities.
 
 ## Privacy
 
