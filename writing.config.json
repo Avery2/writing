@@ -2,6 +2,8 @@
   "base_url": "/writing/",
   "root_note": "notes",
   "favicon_url": "/assets/images/profile/face.jpg",
+  "resume_root": "resume",
+  "full_resume_url": "https://www.averychan.site/normal-resume/Justin_Avery_Chan_Resume.pdf#view=FitH",
   "legacy_redirects": {
     "harm-reduction.html": "notes/harm-reduction.html"
   }

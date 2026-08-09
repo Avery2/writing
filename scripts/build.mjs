@@ -4,6 +4,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 const contentDirectory = new URL('../content/notes/', import.meta.url);
+const experienceDirectory = new URL('../content/experience/', import.meta.url);
+const educationDirectory = new URL('../content/education/', import.meta.url);
 const config = JSON.parse(await readFile(new URL('../writing.config.json', import.meta.url), 'utf8'));
 const argumentsList = process.argv.slice(2);
 const checkOnly = argumentsList.includes('--check');
@@ -66,6 +68,7 @@ function inlineMarkdown(value) {
   return escapeHTML(value)
     .replace(/\[\[([a-z0-9-]+)\|([^\]]+)\]\]/g, '[[$1|$2]]')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>');
 }
@@ -73,7 +76,13 @@ function inlineMarkdown(value) {
 function markdownToHTML(markdown) {
   if (!markdown) return '';
   return markdown.split(/\n\s*\n/).map((block) => {
-    const text = block.split('\n').map((line) => line.trim()).join(' ');
+    const lines = block.split('\n').map((line) => line.trim());
+    if (lines.every((line) => line.startsWith('- '))) {
+      return `<ul>${lines.map((line) => `<li>${inlineMarkdown(line.slice(2))}</li>`).join('')}</ul>`;
+    }
+    const heading = lines[0].match(/^(#{2,3})\s+(.+)$/);
+    if (heading && lines.length === 1) return `<h${heading[1].length}>${inlineMarkdown(heading[2])}</h${heading[1].length}>`;
+    const text = lines.join(' ');
     if (text.startsWith('> ')) return `<blockquote>${inlineMarkdown(text.slice(2))}</blockquote>`;
     return `<p>${inlineMarkdown(text)}</p>`;
   }).join('\n');
@@ -81,6 +90,21 @@ function markdownToHTML(markdown) {
 
 const files = (await readdir(contentDirectory)).filter((file) => file.endsWith('.md')).sort();
 const notes = await Promise.all(files.map(async (file) => parseNote(await readFile(new URL(file, contentDirectory), 'utf8'), file)));
+
+async function loadDocuments(directory, kind) {
+  const sourceFiles = (await readdir(directory)).filter((file) => file.endsWith('.md')).sort();
+  const documents = await Promise.all(sourceFiles.map(async (file) => parseNote(await readFile(new URL(file, directory), 'utf8'), `${kind}/${file}`)));
+  for (const document of documents) {
+    if (document.kind !== kind) throw new Error(`${kind}/${document.slug}.md must declare kind: ${kind}`);
+  }
+  return { sourceFiles, documents };
+}
+
+const { sourceFiles: experienceFiles, documents: experiences } = await loadDocuments(experienceDirectory, 'experience');
+const { sourceFiles: educationFiles, documents: education } = await loadDocuments(educationDirectory, 'education');
+const resume = parseNote(await readFile(new URL('../content/resume.md', import.meta.url), 'utf8'), 'resume.md');
+if (resume.kind !== 'resume' || resume.slug !== config.resume_root) throw new Error('content/resume.md must match the configured resume_root');
+const resumeEntries = [...experiences, ...education];
 const noteBySlug = new Map();
 for (const note of notes) {
   if (noteBySlug.has(note.slug)) throw new Error(`Duplicate slug: ${note.slug}`);
@@ -150,7 +174,7 @@ function page(note) {
 for (const note of notes) linkify(note.body);
 
 if (checkOnly) {
-  console.log(`Validated ${notes.length} notes and ${files.length} Markdown sources.`);
+  console.log(`Validated ${notes.length} notes and ${files.length + experienceFiles.length + educationFiles.length + 1} Markdown sources.`);
   process.exit(0);
 }
 
@@ -163,6 +187,7 @@ await Promise.all([
   cp(new URL('../src/notes.css', import.meta.url), new URL('./notes.css', notesDirectory)),
   cp(new URL('../src/notes-index.js', import.meta.url), new URL('./notes-index.js', notesDirectory)),
   cp(new URL('../src/theme.js', import.meta.url), new URL('./theme.js', assetsDirectory)),
+  cp(new URL('../src/resume.css', import.meta.url), new URL('./resume.css', assetsDirectory)),
   cp(new URL('../styles/portfolio-foundation.css', import.meta.url), new URL('./portfolio-foundation.css', assetsDirectory))
 ]);
 
@@ -177,8 +202,34 @@ await writeFile(new URL('./corpus.generated.mjs', notesDirectory), `// Generated
 const manifest = notes.map(({ body, ...metadata }) => ({ ...metadata, url: `${baseURL}notes/${metadata.slug}.html` }));
 await writeFile(new URL('./manifest.json', outputDirectory), `${JSON.stringify({ generated_at: new Date().toISOString(), notes: manifest }, null, 2)}\n`);
 
+function resumeNavigation(activeSlug = '') {
+  const links = resumeEntries.map((entry) => {
+    const current = entry.slug === activeSlug ? ' aria-current="page"' : '';
+    return `<a href="${baseURL}${entry.kind}/${entry.slug}.html"${current}>${escapeHTML(entry.title)}</a>`;
+  }).join('');
+  return `<nav class="resume-nav" aria-label="Experience and education">
+    <h2>More experience and education</h2>
+    <div class="resume-nav-links">${links}</div>
+    <div class="resume-nav-primary"><a href="${baseURL}${resume.slug}.html">Overview</a><a href="${config.full_resume_url}">View full résumé</a></div>
+  </nav>`;
+}
+
+function resumePage(document, { index = false } = {}) {
+  const meta = index ? '' : `<div class="resume-meta"><span>${escapeHTML(document.dates || '')}</span><span>${escapeHTML(document.location || '')}</span>${document.detail ? `<span>${escapeHTML(document.detail)}</span>` : ''}</div>`;
+  const entryList = index ? `<ul class="resume-index">${resumeEntries.map((entry) => `<li><a href="${baseURL}${entry.kind}/${entry.slug}.html"><strong>${escapeHTML(entry.title)}</strong><span>${escapeHTML(entry.summary)}</span><small>${escapeHTML(entry.dates || '')}${entry.location ? ` · ${escapeHTML(entry.location)}` : ''}</small></a></li>`).join('')}</ul>` : '';
+  return `<!doctype html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="${escapeHTML(document.summary)}"><title>${escapeHTML(document.title)} — Avery</title><link rel="icon" href="${config.favicon_url}" type="image/jpeg"><link rel="stylesheet" href="${baseURL}assets/portfolio-foundation.css"><link rel="stylesheet" href="${baseURL}notes/notes.css"><link rel="stylesheet" href="${baseURL}assets/resume.css"><script type="module" src="${baseURL}assets/theme.js"></script></head>
+<body class="notes-page resume-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a><a class="notes-home" href="${baseURL}${resume.slug}.html">Résumé</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="resume-shell"><article class="note-article"><header class="note-header"><div class="note-kicker">${index ? 'Résumé' : escapeHTML(document.kind)}</div><h1>${escapeHTML(document.title)}</h1><p class="note-summary">${escapeHTML(document.summary)}</p>${meta}</header><div class="note-body">${document.body}${entryList}</div>${resumeNavigation(index ? '' : document.slug)}</article></main></body></html>`;
+}
+
+await mkdir(new URL('./experience/', outputDirectory), { recursive: true });
+await mkdir(new URL('./education/', outputDirectory), { recursive: true });
+await Promise.all(resumeEntries.map((entry) => writeFile(new URL(`./${entry.kind}/${entry.slug}.html`, outputDirectory), resumePage(entry))));
+await writeFile(new URL(`./${resume.slug}.html`, outputDirectory), resumePage(resume, { index: true }));
+
 function redirectPage(destination, title) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=${destination}"><link rel="canonical" href="${destination}"><link rel="icon" href="${config.favicon_url}" type="image/jpeg"><title>${escapeHTML(title)} — Avery</title></head><body><p>Continue to <a href="${destination}">${escapeHTML(title)}</a>.</p></body></html>`;
+  const encodedDestination = JSON.stringify(destination).replaceAll('<', '\\u003c');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="canonical" href="${destination}"><link rel="icon" href="${config.favicon_url}" type="image/jpeg"><title>${escapeHTML(title)} — Avery</title><script>location.replace(${encodedDestination})</script></head><body><p>Continue to <a href="${destination}">${escapeHTML(title)}</a>.</p></body></html>`;
 }
 
 await writeFile(new URL('./index.html', outputDirectory), redirectPage(`${baseURL}notes/${rootNote.slug}.html`, rootNote.title));

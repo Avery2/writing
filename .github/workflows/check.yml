@@ -22,5 +22,9 @@ jobs:
       - name: Verify private bodies and source files are absent
         run: |
           test ! -d dist/writing/notes/content
+          test -f dist/writing/experience/amplitude.html
+          test -f dist/writing/education/university-of-wisconsin-madison.html
+          test -f dist/writing/resume.html
+          grep -q 'View full résumé' dist/writing/experience/amplitude.html
+          grep -q 'location.replace' dist/writing/index.html
           node -e "import('./dist/writing/notes/corpus.generated.mjs').then(({notes}) => { if (notes.some((note) => note.status === 'private' && note.body)) process.exit(1) })"
-

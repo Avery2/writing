@@ -4,8 +4,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: '23 7 * * *'
 
 permissions:
   contents: read
@@ -26,13 +24,6 @@ jobs:
       - name: Checkout writing source
         uses: actions/checkout@v4
 
-      - name: Checkout portfolio compatibility pages
-        uses: actions/checkout@v4
-        with:
-          repository: Avery2/Avery2.github.io
-          ref: main
-          path: .portfolio-source
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -42,11 +33,12 @@ jobs:
           npm run check
           node scripts/build.mjs --output dist/site --base-url /writing/
 
-      - name: Preserve portfolio-owned resume routes
+      - name: Verify generated routes
         run: |
-          cp -R .portfolio-source/writing/experience dist/site/experience
-          cp -R .portfolio-source/writing/education dist/site/education
           test -f dist/site/experience/amplitude.html
+          test -f dist/site/education/university-of-wisconsin-madison.html
+          test -f dist/site/resume.html
+          grep -q 'location.replace' dist/site/index.html
 
       - uses: actions/configure-pages@v4
 

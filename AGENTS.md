@@ -4,7 +4,7 @@ This repository owns Avery's Markdown corpus, note graph, writing compiler, link
 
 ## Invariants
 
-- Markdown plus YAML frontmatter in `content/notes/` is the source of truth.
+- Markdown plus YAML frontmatter under `content/` is the source of truth.
 - Never edit generated files in `dist/` as source.
 - Preserve stable slugs and real static note routes.
 - The graph is the information architecture; the stacked active path is the reading interface.
@@ -14,6 +14,7 @@ This repository owns Avery's Markdown corpus, note graph, writing compiler, link
 - Publishing and portfolio featuring are separate editorial decisions.
 - Disconnected and unlisted public graphs are valid.
 - `writing.config.json` is the single source for the landing/root note and compatibility redirects.
+- Experience and education sources live here and retain their stable `/writing/experience/` and `/writing/education/` routes; the portfolio may link to them but must not generate their HTML.
 
 ## Privacy
 
