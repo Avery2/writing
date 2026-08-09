@@ -59,6 +59,7 @@ The graph may be disconnected. A public note does not need to appear in an index
 - `title`: Public display title.
 - `summary`: Public description used in indexes and metadata.
 - `status`: `published`, `draft`, `stub`, or `private`.
+- `date`: optional editorial creation or publication date in `YYYY-MM-DD` format.
 - `visibility`: `featured`, `listed`, or `unlisted`. Defaults to `listed` for the prototype corpus.
 - `kind`: Editorial shape such as `substantial`, `partial`, or `stub`.
 - `ai_generated`: Displays the provenance notice when true.

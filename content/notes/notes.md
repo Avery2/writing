@@ -3,6 +3,7 @@ slug: notes
 title: "Notes"
 summary: "A connected space for writing that can grow over time."
 status: published
+date: "2026-08-09"
 kind: substantial
 ai_generated: false
 ---
