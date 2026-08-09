@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 const contentDirectory = new URL('../content/notes/', import.meta.url);
+const config = JSON.parse(await readFile(new URL('../writing.config.json', import.meta.url), 'utf8'));
 const argumentsList = process.argv.slice(2);
 const checkOnly = argumentsList.includes('--check');
 
@@ -16,7 +17,7 @@ const outputPath = resolve(process.cwd(), argumentValue('--output', 'dist/writin
 const outputDirectory = pathToFileURL(`${outputPath}/`);
 const notesDirectory = new URL('./notes/', outputDirectory);
 const assetsDirectory = new URL('./assets/', outputDirectory);
-const baseURL = normalizeBase(argumentValue('--base-url', '/writing/'));
+const baseURL = normalizeBase(argumentValue('--base-url', config.base_url));
 
 function normalizeBase(value) {
   return `/${value.replace(/^\/+|\/+$/g, '')}/`;
@@ -80,12 +81,15 @@ function markdownToHTML(markdown) {
 
 const files = (await readdir(contentDirectory)).filter((file) => file.endsWith('.md')).sort();
 const notes = await Promise.all(files.map(async (file) => parseNote(await readFile(new URL(file, contentDirectory), 'utf8'), file)));
-notes.sort((a, b) => Number(Boolean(b.root_note)) - Number(Boolean(a.root_note)) || a.title.localeCompare(b.title));
 const noteBySlug = new Map();
 for (const note of notes) {
   if (noteBySlug.has(note.slug)) throw new Error(`Duplicate slug: ${note.slug}`);
   noteBySlug.set(note.slug, note);
 }
+const rootNote = noteBySlug.get(config.root_note);
+if (!rootNote) throw new Error(`Configured root note does not exist: ${config.root_note}`);
+notes.forEach((note) => { note.root_note = note.slug === config.root_note; });
+notes.sort((a, b) => Number(b.root_note) - Number(a.root_note) || a.title.localeCompare(b.title));
 
 function linkify(body = '') {
   return body.replace(/\[\[([a-z0-9-]+)\|([^\]]+)\]\]/g, (_, slug, label) => {
@@ -172,6 +176,13 @@ await writeFile(new URL('./corpus.generated.mjs', notesDirectory), `// Generated
 const manifest = notes.map(({ body, ...metadata }) => ({ ...metadata, url: `${baseURL}notes/${metadata.slug}.html` }));
 await writeFile(new URL('./manifest.json', outputDirectory), `${JSON.stringify({ generated_at: new Date().toISOString(), notes: manifest }, null, 2)}\n`);
 
-await writeFile(new URL('./harm-reduction.html', outputDirectory), `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=${baseURL}notes/harm-reduction.html"><link rel="canonical" href="${baseURL}notes/harm-reduction.html"><title>Harm Reduction — Avery</title></head><body><p>This writing has moved to <a href="${baseURL}notes/harm-reduction.html">Harm Reduction</a>.</p></body></html>`);
+function redirectPage(destination, title) {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=${destination}"><link rel="canonical" href="${destination}"><title>${escapeHTML(title)} — Avery</title></head><body><p>Continue to <a href="${destination}">${escapeHTML(title)}</a>.</p></body></html>`;
+}
+
+await writeFile(new URL('./index.html', outputDirectory), redirectPage(`${baseURL}notes/${rootNote.slug}.html`, rootNote.title));
+for (const [legacyPath, destination] of Object.entries(config.legacy_redirects || {})) {
+  await writeFile(new URL(`./${legacyPath}`, outputDirectory), redirectPage(`${baseURL}${destination}`, noteBySlug.get(destination.split('/').at(-1).replace('.html', ''))?.title || 'Writing'));
+}
 
 console.log(`Built ${notes.length} notes to ${outputPath} with base ${baseURL}`);

@@ -1,0 +1,59 @@
+name: Deploy writing to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '23 7 * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: writing-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout writing source
+        uses: actions/checkout@v4
+
+      - name: Checkout portfolio compatibility pages
+        uses: actions/checkout@v4
+        with:
+          repository: Avery2/Avery2.github.io
+          ref: main
+          path: .portfolio-source
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build writing
+        run: |
+          npm run check
+          node scripts/build.mjs --output dist/site --base-url /writing/
+
+      - name: Preserve portfolio-owned resume routes
+        run: |
+          cp -R .portfolio-source/writing/experience dist/site/experience
+          cp -R .portfolio-source/writing/education dist/site/education
+          test -f dist/site/experience/amplitude.html
+
+      - uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

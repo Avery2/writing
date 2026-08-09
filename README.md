@@ -1,6 +1,6 @@
 # Avery's writing
 
-This private repository is the source of truth and publishing engine for writing served at [`averychan.site/writing/`](https://www.averychan.site/writing/). The portfolio repository owns the domain and final GitHub Pages deployment; this repository owns the Markdown, note graph, templates, and build rules.
+This repository is the source of truth, publishing engine, and GitHub Pages project site for writing served at [`averychan.site/writing/`](https://www.averychan.site/writing/). The portfolio repository owns the parent domain and homepage curation; this repository owns the `/writing/` URL prefix, Markdown, note graph, templates, and build rules.
 
 ## How publishing works
 
@@ -11,18 +11,20 @@ scripts/build.mjs
         ↓
 static HTML + linked-note enhancement
         ↓
-Avery2.github.io Pages workflow
+this repository's Pages workflow
         ↓
 averychan.site/writing/
 ```
 
-The portfolio workflow checks out this repository with a read-only deploy key and runs:
+The writing Pages workflow runs:
 
 ```bash
-npm run build -- --output ../_site/writing --base-url /writing/
+npm run build -- --output dist/site --base-url /writing/
 ```
 
 Generated output belongs in `dist/` locally and is not committed. The portfolio manually chooses which public entry points appear as homepage cards; publishing a note does not automatically feature it.
+
+Pushes to `main` deploy automatically. `writing.config.json` selects the landing note and legacy redirects. The workflow also copies portfolio-owned resume detail pages into the artifact so existing `/writing/experience/` and `/writing/education/` URLs remain valid; a daily scheduled deployment refreshes those compatibility pages.
 
 ## Write a note
 
@@ -59,14 +61,14 @@ The graph may be disconnected. A public note does not need to appear in an index
 - `visibility`: `featured`, `listed`, or `unlisted`. Defaults to `listed` for the prototype corpus.
 - `kind`: Editorial shape such as `substantial`, `partial`, or `stub`.
 - `ai_generated`: Displays the provenance notice when true.
-- `root_note`: Marks the main Notes introduction.
+- The root note is selected once in `writing.config.json`, rather than repeated in content metadata.
 - `unavailable`: Publishes metadata and an unavailable destination without a body.
 
 `status` and `visibility` are intentionally separate. A generated page may be public but unlisted. The portfolio's `manual-tiles.yml` remains the explicit editorial list of featured entry points.
 
 ## Privacy boundary
 
-This repository is private, but its build output is public. The compiler never emits a body for `status: private`; it publishes public metadata and the unavailable-state message only. Do not put sensitive details in titles or summaries. Review generated `dist/writing/` before publishing changes to privacy behavior.
+This source repository and its build output are public. Never commit actual private prose here. A `status: private` file may contain public title/summary metadata only; the compiler discards its body defensively and publishes the unavailable-state message. Sensitive drafts belong in a separate private store. Review generated `dist/writing/` before publishing changes to privacy behavior.
 
 ## Structure
 
@@ -81,4 +83,4 @@ AGENTS.md             Durable instructions for coding agents
 
 ## Relationship to the portfolio
 
-The writing site is visually related to the portfolio but independently owned. `styles/portfolio-foundation.css` contains the small token/reset contract it needs. Avoid importing the portfolio's complete CSS or moving writing compilation back into the portfolio repository.
+The writing site is visually related to the portfolio but independently owned. `styles/portfolio-foundation.css` contains the small token/reset contract it needs. Avoid importing the portfolio's complete CSS or moving writing compilation back into the portfolio repository. The writing Pages artifact owns `/writing/`; resume detail sources remain portfolio-owned and are copied only for URL compatibility.

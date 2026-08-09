@@ -1,6 +1,6 @@
 # Writing repository instructions
 
-This repository owns Avery's Markdown corpus, note graph, writing compiler, and linked reading interface. Its public output is composed into `Avery2/Avery2.github.io` at `/writing/`; the portfolio repository owns homepage curation and final Pages deployment.
+This repository owns Avery's Markdown corpus, note graph, writing compiler, linked reading interface, and the GitHub Pages project site mounted at `/writing/`. The portfolio repository owns the parent homepage and manually curated entry points.
 
 ## Invariants
 
@@ -13,10 +13,11 @@ This repository owns Avery's Markdown corpus, note graph, writing compiler, and 
 - Ordinary static pages must remain readable if enhancement JavaScript fails.
 - Publishing and portfolio featuring are separate editorial decisions.
 - Disconnected and unlisted public graphs are valid.
+- `writing.config.json` is the single source for the landing/root note and compatibility redirects.
 
 ## Privacy
 
-- Build output is public even though this repository is private.
+- Both source and build output are public; never commit actual private prose here.
 - `status: private` must never emit the Markdown body or include it in client data.
 - Public title/summary metadata for an unavailable concept is allowed.
 - Never implement privacy by shipping prose and hiding it in CSS or client JavaScript.
@@ -31,4 +32,3 @@ This repository owns Avery's Markdown corpus, note graph, writing compiler, and 
 ## Before committing
 
 Run `npm run check`. For content changes, inspect the generated route and verify that every `[[slug|label]]` target resolves.
-
