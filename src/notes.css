@@ -5,7 +5,7 @@
   --notes-rule: var(--border-color);
   --notes-accent: var(--accent-primary);
   --notes-header-height: 72px;
-  --writing-shell-gutter: clamp(1.25rem, 4vw, 3rem);
+  --writing-shell-gutter: var(--site-shell-gutter);
 }
 
 [data-theme="dark"] {
@@ -16,14 +16,12 @@ body.notes-page { background: var(--notes-paper); color: var(--notes-ink); overf
 
 .notes-site-header {
   position: relative; z-index: 100; height: var(--notes-header-height); display: flex; align-items: center; gap: 1.25rem;
-  padding: 0 var(--writing-shell-gutter); border-bottom: 1px solid var(--notes-rule);
-  background: color-mix(in srgb, var(--notes-paper) 94%, transparent); backdrop-filter: blur(10px);
+  padding: 0 var(--writing-shell-gutter); background: var(--header-bg); backdrop-filter: blur(10px);
 }
 
 .notes-brand { color: var(--notes-ink); font-size: 1.5rem; font-weight: 750; letter-spacing: -.03em; line-height: 1; }
 .notes-brand:hover { color: var(--notes-accent); text-decoration: none; }
-.notes-home { color: var(--notes-muted); font-size: .9rem; }
-.notes-home:hover { color: var(--notes-ink); text-decoration: none; }
+.notes-site-header .site-section-nav { flex: 1; }
 .notes-theme { display: grid; width: 40px; height: 40px; margin-left: auto; place-items: center; border: 1px solid var(--notes-rule); border-radius: 50%; background: var(--bg-secondary); color: var(--notes-ink); font-size: 1.15rem; }
 .notes-theme:hover { border-color: var(--notes-accent); background: var(--notes-accent); color: white; }
 .notes-app { height: calc(100dvh - var(--notes-header-height)); width: 100%; }

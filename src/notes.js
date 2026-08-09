@@ -168,12 +168,15 @@ function render({ focus = false, announce = true } = {}) {
   const projectDocument = activeDocument.kind === 'project' || activeDocument.kind === 'projects';
   const sectionTitle = resumeDocument ? 'Résumé' : projectDocument ? 'Projects' : 'Notes';
   document.title = `${activeDocument.title} — ${sectionTitle} — Avery`;
-  const sectionLink = document.querySelector('.notes-home');
-  if (sectionLink) {
-    const sectionRoot = resumeDocument ? 'resume' : projectDocument ? 'projects' : 'notes';
-    sectionLink.href = noteBySlug.get(sectionRoot).url;
-    sectionLink.textContent = sectionTitle;
-  }
+  const activeSection = resumeDocument
+    ? 'experience'
+    : projectDocument
+      ? 'projects'
+      : ['find-me', 'links'].includes(activeDocument.slug) ? 'links' : 'writing';
+  document.querySelectorAll('.site-section-nav [data-section]').forEach(link => {
+    if (link.dataset.section === activeSection) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
   if (focus) (trackEl.querySelector('.stack-pane--active h1') || trackEl.querySelector('.stack-pane--expanded h1'))?.focus({ preventScroll: true });
   if (announce) announcePath();
 }

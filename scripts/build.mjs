@@ -20,7 +20,7 @@ const outputDirectory = pathToFileURL(`${outputPath}/`);
 const notesDirectory = new URL('./notes/', outputDirectory);
 const assetsDirectory = new URL('./assets/', outputDirectory);
 const baseURL = normalizeBase(argumentValue('--base-url', config.base_url));
-const themeBootstrap = `<script>try{const t=sessionStorage.getItem('site-theme-override');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}</script><style>html{background:#f4f1eb}html[data-theme="dark"]{background:#111214}</style>`;
+const themeBootstrap = `<script>try{const t=sessionStorage.getItem('site-theme-override');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}</script><style>html{background:#f7f1e3}html[data-theme="dark"]{background:#151310}</style>`;
 
 function normalizeBase(value) {
   return `/${value.replace(/^\/+|\/+$/g, '')}/`;
@@ -171,6 +171,27 @@ function sourceNotice(document) {
   return `<footer class="writing-source">Generated from <a href="${sourceURL}">Markdown source on GitHub</a>.</footer>`;
 }
 
+const sectionDestinations = [
+  ['home', 'Home', '/'],
+  ['writing', 'Writing', `${baseURL}notes/writing.html?path=writing&open=last&from=portfolio`],
+  ['experience', 'Experience', `${baseURL}resume.html?path=resume&open=last&from=portfolio`],
+  ['links', 'Links', `${baseURL}notes/find-me.html?path=find-me&open=last&from=portfolio`],
+  ['projects', 'Projects', '/projects/index.html']
+];
+
+function sectionNavigation(activeSection) {
+  const links = sectionDestinations.map(([section, label, url]) =>
+    `<a href="${url}" data-section="${section}"${section === activeSection ? ' aria-current="page"' : ''}>${label}</a>`
+  ).join('');
+  return `<nav class="site-section-nav" aria-label="Portfolio sections">${links}</nav>`;
+}
+
+function sectionForDocument(document) {
+  if (['resume', 'experience', 'education'].includes(document.kind)) return 'experience';
+  if (['find-me', 'links'].includes(document.slug)) return 'links';
+  return 'writing';
+}
+
 function page(note) {
   const robots = note.visibility === 'unlisted' ? '<meta name="robots" content="noindex">' : '';
   return `<!doctype html>
@@ -191,7 +212,7 @@ function page(note) {
 <body class="notes-page">
   <header class="notes-site-header">
     <a class="notes-brand" href="/">Avery</a>
-    <a class="notes-home" href="${['resume', 'experience', 'education'].includes(note.kind) ? resume.url : `${baseURL}notes/notes.html`}">${['resume', 'experience', 'education'].includes(note.kind) ? 'Résumé' : 'Notes'}</a>
+    ${sectionNavigation(sectionForDocument(note))}
     <button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button>
   </header>
   <main id="notes-app" class="notes-app" data-initial-note="${note.slug}">
@@ -228,7 +249,7 @@ await Promise.all(notes.map((note) => writeFile(new URL(`./${note.slug}.html`, n
 
 const publicIndexNotes = notes.filter((note) => !note.unavailable && !note.root_note && note.visibility !== 'unlisted');
 const cards = publicIndexNotes.map((note) => `<li><a href="./${note.slug}.html"><strong>${escapeHTML(note.title)}</strong><span>${escapeHTML(note.summary)}</span><small>${note.ai_generated ? 'AI example · ' : ''}${note.status}</small></a></li>`).join('\n');
-await writeFile(new URL('./index.html', notesDirectory), `<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Example notes — Avery</title>${themeBootstrap}<link rel="icon" href="${config.favicon_url}" type="image/jpeg"><link rel="stylesheet" href="${baseURL}assets/portfolio-foundation.css"><link rel="stylesheet" href="./notes.css"><script type="module" src="./notes-index.js"></script></head><body class="notes-page notes-index-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a><a class="notes-home" href="./notes.html">Notes</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="notes-index"><header><p class="note-kicker">AI-generated prototype corpus</p><h1>Seeing and navigating information</h1><p>Substantive example writing created to test the linked-notes interaction. This is not presented as Avery’s published writing.</p></header><ul>${cards}</ul></main></body></html>`);
+await writeFile(new URL('./index.html', notesDirectory), `<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Example notes — Avery</title>${themeBootstrap}<link rel="icon" href="${config.favicon_url}" type="image/jpeg"><link rel="stylesheet" href="${baseURL}assets/portfolio-foundation.css"><link rel="stylesheet" href="./notes.css"><script type="module" src="./notes-index.js"></script></head><body class="notes-page notes-index-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a>${sectionNavigation('writing')}<button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="notes-index"><header><p class="note-kicker">AI-generated prototype corpus</p><h1>Seeing and navigating information</h1><p>Substantive example writing created to test the linked-notes interaction. This is not presented as Avery’s published writing.</p></header><ul>${cards}</ul></main></body></html>`);
 
 await writeFile(new URL('./corpus.generated.mjs', notesDirectory), `// Generated by scripts/build.mjs from content/**/*.md. Do not edit directly.\nexport const notes = ${JSON.stringify(writingDocuments, null, 2)};\nexport const noteBySlug = new Map(notes.map((note) => [note.slug, note]));\n`);
 
@@ -238,7 +259,7 @@ await writeFile(new URL('./manifest.json', outputDirectory), `${JSON.stringify({
 function fullResumePage() {
   return `<!doctype html>
 <html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Avery’s full résumé"><title>Full résumé — Avery</title>${themeBootstrap}<link rel="icon" href="${config.favicon_url}" type="image/jpeg"><link rel="stylesheet" href="${baseURL}assets/portfolio-foundation.css"><link rel="stylesheet" href="${baseURL}notes/notes.css"><link rel="stylesheet" href="${baseURL}assets/resume.css"><script type="module" src="${baseURL}assets/resume.js"></script></head>
-<body class="notes-page resume-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a><a class="notes-home" href="${baseURL}${resume.slug}.html">Résumé</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="resume-viewer-shell"><a class="content-back-link" href="${baseURL}${resume.slug}.html">← Back to experience and education</a><header class="resume-viewer-header"><div><div class="note-kicker">Résumé</div><h1>Full résumé</h1></div><a class="resume-pdf-link" href="${config.full_resume_pdf_url}">Open or download PDF</a></header><iframe class="resume-pdf-frame" title="Avery’s full résumé PDF" src="${config.full_resume_pdf_url}"><p>Your browser cannot embed this PDF. <a href="${config.full_resume_pdf_url}">Open the résumé PDF</a>.</p></iframe><footer class="writing-source">PDF generated from <a href="${config.full_resume_source_url}">HTML source on GitHub</a>.</footer></main></body></html>`;
+<body class="notes-page resume-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a>${sectionNavigation('experience')}<button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="resume-viewer-shell"><a class="content-back-link" href="${baseURL}${resume.slug}.html">← Back to experience and education</a><header class="resume-viewer-header"><div><div class="note-kicker">Résumé</div><h1>Full résumé</h1></div><a class="resume-pdf-link" href="${config.full_resume_pdf_url}">Open or download PDF</a></header><iframe class="resume-pdf-frame" title="Avery’s full résumé PDF" src="${config.full_resume_pdf_url}"><p>Your browser cannot embed this PDF. <a href="${config.full_resume_pdf_url}">Open the résumé PDF</a>.</p></iframe><footer class="writing-source">PDF generated from <a href="${config.full_resume_source_url}">HTML source on GitHub</a>.</footer></main></body></html>`;
 }
 
 await mkdir(new URL('./experience/', outputDirectory), { recursive: true });

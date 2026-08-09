@@ -2,23 +2,30 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg-primary: #f4f1eb;
-  --bg-secondary: #eeeae3;
-  --text-primary: #191817;
-  --text-secondary: #706c66;
-  --text-tertiary: #817c75;
-  --accent-primary: #f2672e;
-  --border-color: #d9d4cb;
+  --site-shell-gutter: clamp(1.25rem, 4vw, 3rem);
+  --bg-primary: #f7f1e3;
+  --bg-secondary: #eee6d8;
+  --bg-tertiary: #e5daca;
+  --text-primary: #161616;
+  --text-secondary: #68655f;
+  --text-tertiary: #7b7770;
+  --accent-primary: #38618c;
+  --accent-secondary: #96c5f7;
+  --border-color: #d8d4cb;
+  --header-bg: rgb(247 241 227 / .95);
 }
 
 [data-theme="dark"] {
-  --bg-primary: #111214;
-  --bg-secondary: #17191c;
+  --bg-primary: #151310;
+  --bg-secondary: #1c1916;
+  --bg-tertiary: #28241f;
   --text-primary: #f2f0ec;
   --text-secondary: #a5a19b;
   --text-tertiary: #918d87;
-  --accent-primary: #ff7840;
-  --border-color: #303238;
+  --accent-primary: #38618c;
+  --accent-secondary: #96c5f7;
+  --border-color: #383229;
+  --header-bg: rgb(21 19 16 / .95);
 }
 
 html { height: 100%; font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -26,4 +33,11 @@ body { min-height: 100%; background: var(--bg-primary); color: var(--text-primar
 a { color: var(--accent-primary); text-decoration: none; }
 button { border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
 a:focus-visible, button:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+.site-section-nav { display: flex; min-width: 0; align-items: center; gap: .75rem; overflow-x: auto; scrollbar-width: none; }
+.site-section-nav::-webkit-scrollbar { display: none; }
+.site-section-nav a, .site-section-nav button { position: relative; flex: 0 0 auto; padding: .375rem .25rem .5rem; color: var(--text-secondary); font-family: inherit; font-size: .875rem; font-weight: 500; line-height: 1.2; text-decoration: none; white-space: nowrap; }
+.site-section-nav a::after, .site-section-nav button::after { content: ''; position: absolute; right: .25rem; bottom: 0; left: .25rem; height: 2px; background: transparent; }
+.site-section-nav a:hover, .site-section-nav button:hover, .site-section-nav [aria-current="page"] { color: var(--text-primary); text-decoration: none; }
+.site-section-nav [aria-current="page"]::after, .site-section-nav a:focus-visible::after, .site-section-nav button:focus-visible::after { background: var(--accent-primary); }
+.site-section-nav a:focus-visible, .site-section-nav button:focus-visible { outline: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
