@@ -25,6 +25,7 @@ npm run build -- --output dist/site --base-url /writing/
 Generated output belongs in `dist/` locally and is not committed. The portfolio manually chooses which public entry points appear as homepage cards; publishing a note does not automatically feature it.
 
 Pushes to `main` deploy automatically. `writing.config.json` selects the landing note and legacy redirects. The workflow also copies portfolio-owned resume detail pages into the artifact so existing `/writing/experience/` and `/writing/education/` URLs remain valid; a daily scheduled deployment refreshes those compatibility pages.
+The same config references the portfolio favicon so both sites share browser identity without duplicating the image asset.
 
 ## Write a note
 

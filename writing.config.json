@@ -1,8 +1,8 @@
 {
   "base_url": "/writing/",
   "root_note": "notes",
+  "favicon_url": "/assets/images/profile/face.jpg",
   "legacy_redirects": {
     "harm-reduction.html": "notes/harm-reduction.html"
   }
 }
-
