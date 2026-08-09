@@ -17,3 +17,13 @@ body.resume-page { display: block; overflow-x: hidden; overflow-y: auto; }
 .resume-page .note-body code { padding: .08em .3em; border-radius: .2rem; background: color-mix(in srgb, var(--notes-rule) 35%, transparent); font: .85em/1.2 ui-monospace, monospace; }
 .resume-index { margin: 0 0 1.6rem; padding-left: 1.25rem; }
 .resume-index li { margin: .55rem 0; }
+.resume-viewer-shell { width: min(100%, 1180px); margin: 0 auto; padding: clamp(2rem, 4vw, 3.5rem) clamp(1rem, 4vw, 3rem) 4rem; }
+.resume-viewer-header { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.25rem; }
+.resume-viewer-header h1 { margin: .35rem 0 0; color: var(--notes-ink); font: 500 clamp(2.2rem, 5vw, 4rem)/1 Georgia, "Times New Roman", serif; letter-spacing: -.045em; }
+.resume-pdf-link { flex: none; color: var(--notes-accent); font-size: .82rem; text-decoration: underline; text-underline-offset: .18em; }
+.resume-pdf-frame { display: block; width: 100%; height: min(76dvh, 1050px); min-height: 560px; border: 1px solid var(--notes-rule); border-radius: .35rem; background: white; }
+.resume-viewer-shell .writing-source { margin-top: 1.25rem; }
+@media (max-width: 600px) {
+  .resume-viewer-header { display: grid; align-items: start; }
+  .resume-pdf-frame { height: 72dvh; min-height: 430px; }
+}

@@ -38,6 +38,7 @@ jobs:
           test -f dist/site/experience/amplitude.html
           test -f dist/site/education/university-of-wisconsin-madison.html
           test -f dist/site/resume.html
+          test -f dist/site/resume/full.html
           grep -q 'location.replace' dist/site/index.html
 
       - uses: actions/configure-pages@v4

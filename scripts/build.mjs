@@ -220,7 +220,7 @@ function resumeNavigation(activeSlug = '') {
   return `<nav class="resume-nav" aria-label="Experience and education">
     <h2>More experience and education</h2>
     <ul>${links}</ul>
-    <p><a href="${baseURL}${resume.slug}.html">Experience and education overview</a> · <a href="${config.full_resume_url}">View full résumé</a></p>
+    <p><a href="${baseURL}${resume.slug}.html">Experience and education overview</a> · <a href="${baseURL}resume/full.html">View full résumé</a></p>
   </nav>`;
 }
 
@@ -232,10 +232,18 @@ function resumePage(document, { index = false } = {}) {
 <body class="notes-page resume-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a><a class="notes-home" href="${baseURL}${resume.slug}.html">Résumé</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="resume-shell"><article class="note-article"><a class="content-back-link" href="${index ? '/' : `${baseURL}${resume.slug}.html`}">← ${index ? 'Back to portfolio' : 'Back to experience and education'}</a><header class="note-header"><div class="note-kicker">${index ? 'Résumé' : escapeHTML(document.kind)}</div><h1>${escapeHTML(document.title)}</h1><p class="note-summary">${escapeHTML(document.summary)}</p>${meta}</header><div class="note-body">${document.body}${entryList}</div>${resumeNavigation(index ? '' : document.slug)}${sourceNotice(document)}</article></main></body></html>`;
 }
 
+function fullResumePage() {
+  return `<!doctype html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Avery’s full résumé"><title>Full résumé — Avery</title><link rel="icon" href="${config.favicon_url}" type="image/jpeg"><link rel="stylesheet" href="${baseURL}assets/portfolio-foundation.css"><link rel="stylesheet" href="${baseURL}notes/notes.css"><link rel="stylesheet" href="${baseURL}assets/resume.css"><script type="module" src="${baseURL}assets/resume.js"></script></head>
+<body class="notes-page resume-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a><a class="notes-home" href="${baseURL}${resume.slug}.html">Résumé</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="resume-viewer-shell"><a class="content-back-link" href="${baseURL}${resume.slug}.html">← Back to experience and education</a><header class="resume-viewer-header"><div><div class="note-kicker">Résumé</div><h1>Full résumé</h1></div><a class="resume-pdf-link" href="${config.full_resume_pdf_url}">Open or download PDF</a></header><iframe class="resume-pdf-frame" title="Avery’s full résumé PDF" src="${config.full_resume_pdf_url}"><p>Your browser cannot embed this PDF. <a href="${config.full_resume_pdf_url}">Open the résumé PDF</a>.</p></iframe><footer class="writing-source">PDF generated from <a href="${config.full_resume_source_url}">HTML source on GitHub</a>.</footer></main></body></html>`;
+}
+
 await mkdir(new URL('./experience/', outputDirectory), { recursive: true });
 await mkdir(new URL('./education/', outputDirectory), { recursive: true });
 await Promise.all(resumeEntries.map((entry) => writeFile(new URL(`./${entry.kind}/${entry.slug}.html`, outputDirectory), resumePage(entry))));
 await writeFile(new URL(`./${resume.slug}.html`, outputDirectory), resumePage(resume, { index: true }));
+await mkdir(new URL('./resume/', outputDirectory), { recursive: true });
+await writeFile(new URL('./resume/full.html', outputDirectory), fullResumePage());
 
 function redirectPage(destination, title) {
   const encodedDestination = JSON.stringify(destination).replaceAll('<', '\\u003c');

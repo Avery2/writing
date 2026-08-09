@@ -4,7 +4,8 @@
   "favicon_url": "/assets/images/profile/face.jpg",
   "repository_url": "https://github.com/Avery2/writing",
   "resume_root": "resume",
-  "full_resume_url": "https://www.averychan.site/normal-resume/Justin_Avery_Chan_Resume.pdf#view=FitH",
+  "full_resume_pdf_url": "https://www.averychan.site/normal-resume/Justin_Avery_Chan_Resume.pdf#view=FitH",
+  "full_resume_source_url": "https://github.com/Avery2/normal-resume/blob/main/Justin_Avery_Chan_Resume.html",
   "legacy_redirects": {
     "harm-reduction.html": "notes/harm-reduction.html"
   }
