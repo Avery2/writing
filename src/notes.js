@@ -205,7 +205,7 @@ function articleHTML(note) {
     : linkify(note.body);
   const sourceURL = `https://github.com/Avery2/writing/blob/main/${note.source_path}`;
   const isResumeDocument = ['resume', 'experience', 'education'].includes(note.kind);
-  const backLink = enteredFromPortfolio ? `<a class="content-back-link" href="/">← Back to portfolio</a>` : '';
+  const backLink = enteredFromPortfolio && note.slug === initialSlug ? `<a class="content-back-link" href="/">← Back to portfolio</a>` : '';
   const kicker = note.root_note ? 'About these notes' : isResumeDocument ? note.kind : 'Note';
   const meta = isResumeDocument && note.kind !== 'resume' ? `<div class="resume-meta"><span>${note.dates || ''}</span><span>${note.location || ''}</span>${note.detail ? `<span>${note.detail}</span>` : ''}</div>` : '';
   return `<article class="note-article" data-note="${note.slug}">${backLink}<header class="note-header"><div class="note-kicker">${kicker} ${status}</div><h1 tabindex="-1">${note.title}</h1><p class="note-summary">${note.summary}</p>${meta}${warning}</header><div class="note-body">${body}${note.related_html || ''}</div><footer class="writing-source">Generated from <a href="${sourceURL}">Markdown source on GitHub</a>.</footer></article>`;
