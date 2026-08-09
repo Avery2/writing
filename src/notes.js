@@ -154,6 +154,7 @@ function render({ focus = false, announce = true } = {}) {
   const { trackWidth } = computePresentation();
   const viewportEl = app.querySelector('.stack-viewport');
   const trackEl = app.querySelector('.stack-track');
+  viewportEl.classList.toggle('is-history-scrollable', historyExpanded && trackWidth > viewportEl.clientWidth);
   trackEl.style.width = `${trackWidth}px`;
   trackEl.innerHTML = panes.map(paneHTML).join('');
   bindInteractions();
@@ -193,7 +194,8 @@ function articleHTML(note) {
   const body = note.unavailable
     ? `<div class="unavailable-note"><p>This concept exists in the public graph, but its writing is not public.</p><p>No private note content is included in this site.</p></div>`
     : linkify(note.body);
-  return `<article class="note-article" data-note="${note.slug}"><header class="note-header"><div class="note-kicker">${note.root_note ? 'About these notes' : 'Note'} ${status}</div><h1 tabindex="-1">${note.title}</h1><p class="note-summary">${note.summary}</p>${warning}</header><div class="note-body">${body}</div></article>`;
+  const sourceURL = `https://github.com/Avery2/writing/blob/main/${note.source_path}`;
+  return `<article class="note-article" data-note="${note.slug}"><header class="note-header"><div class="note-kicker">${note.root_note ? 'About these notes' : 'Note'} ${status}</div><h1 tabindex="-1">${note.title}</h1><p class="note-summary">${note.summary}</p>${warning}</header><div class="note-body">${body}</div><footer class="writing-source">Generated from <a href="${sourceURL}">Markdown source on GitHub</a>.</footer></article>`;
 }
 
 function linkify(body = '') {

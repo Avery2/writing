@@ -33,7 +33,7 @@ function parseValue(value) {
   return value;
 }
 
-function parseNote(source, filename) {
+function parseNote(source, filename, sourcePath = filename) {
   const match = source.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match) throw new Error(`${filename} is missing YAML frontmatter`);
   const metadata = Object.fromEntries(match[1].split('\n').filter(Boolean).map((line) => {
@@ -46,6 +46,7 @@ function parseNote(source, filename) {
   return {
     visibility: 'listed',
     ...metadata,
+    source_path: sourcePath,
     unavailable: metadata.unavailable || privateBody,
     body: privateBody ? '' : markdownToHTML(match[2].trim())
   };
@@ -89,11 +90,11 @@ function markdownToHTML(markdown) {
 }
 
 const files = (await readdir(contentDirectory)).filter((file) => file.endsWith('.md')).sort();
-const notes = await Promise.all(files.map(async (file) => parseNote(await readFile(new URL(file, contentDirectory), 'utf8'), file)));
+const notes = await Promise.all(files.map(async (file) => parseNote(await readFile(new URL(file, contentDirectory), 'utf8'), file, `content/notes/${file}`)));
 
 async function loadDocuments(directory, kind) {
   const sourceFiles = (await readdir(directory)).filter((file) => file.endsWith('.md')).sort();
-  const documents = await Promise.all(sourceFiles.map(async (file) => parseNote(await readFile(new URL(file, directory), 'utf8'), `${kind}/${file}`)));
+  const documents = await Promise.all(sourceFiles.map(async (file) => parseNote(await readFile(new URL(file, directory), 'utf8'), `${kind}/${file}`, `content/${kind}/${file}`)));
   for (const document of documents) {
     if (document.kind !== kind) throw new Error(`${kind}/${document.slug}.md must declare kind: ${kind}`);
   }
@@ -102,7 +103,7 @@ async function loadDocuments(directory, kind) {
 
 const { sourceFiles: experienceFiles, documents: experiences } = await loadDocuments(experienceDirectory, 'experience');
 const { sourceFiles: educationFiles, documents: education } = await loadDocuments(educationDirectory, 'education');
-const resume = parseNote(await readFile(new URL('../content/resume.md', import.meta.url), 'utf8'), 'resume.md');
+const resume = parseNote(await readFile(new URL('../content/resume.md', import.meta.url), 'utf8'), 'resume.md', 'content/resume.md');
 if (resume.kind !== 'resume' || resume.slug !== config.resume_root) throw new Error('content/resume.md must match the configured resume_root');
 const resumeEntries = [...experiences, ...education];
 const noteBySlug = new Map();
@@ -138,7 +139,13 @@ function article(note) {
       ${warning}
     </header>
     <div class="note-body">${body}</div>
+    ${sourceNotice(note)}
   </article>`;
+}
+
+function sourceNotice(document) {
+  const sourceURL = `${config.repository_url}/blob/main/${document.source_path}`;
+  return `<footer class="writing-source">Generated from <a href="${sourceURL}">Markdown source on GitHub</a>.</footer>`;
 }
 
 function page(note) {
@@ -187,6 +194,7 @@ await Promise.all([
   cp(new URL('../src/notes.css', import.meta.url), new URL('./notes.css', notesDirectory)),
   cp(new URL('../src/notes-index.js', import.meta.url), new URL('./notes-index.js', notesDirectory)),
   cp(new URL('../src/theme.js', import.meta.url), new URL('./theme.js', assetsDirectory)),
+  cp(new URL('../src/resume.js', import.meta.url), new URL('./resume.js', assetsDirectory)),
   cp(new URL('../src/resume.css', import.meta.url), new URL('./resume.css', assetsDirectory)),
   cp(new URL('../styles/portfolio-foundation.css', import.meta.url), new URL('./portfolio-foundation.css', assetsDirectory))
 ]);
@@ -205,21 +213,21 @@ await writeFile(new URL('./manifest.json', outputDirectory), `${JSON.stringify({
 function resumeNavigation(activeSlug = '') {
   const links = resumeEntries.map((entry) => {
     const current = entry.slug === activeSlug ? ' aria-current="page"' : '';
-    return `<a href="${baseURL}${entry.kind}/${entry.slug}.html"${current}>${escapeHTML(entry.title)}</a>`;
+    return `<li><a href="${baseURL}${entry.kind}/${entry.slug}.html"${current}>${escapeHTML(entry.title)}</a></li>`;
   }).join('');
   return `<nav class="resume-nav" aria-label="Experience and education">
     <h2>More experience and education</h2>
-    <div class="resume-nav-links">${links}</div>
-    <div class="resume-nav-primary"><a href="${baseURL}${resume.slug}.html">Overview</a><a href="${config.full_resume_url}">View full résumé</a></div>
+    <ul>${links}</ul>
+    <p><a href="${baseURL}${resume.slug}.html">Experience and education overview</a> · <a href="${config.full_resume_url}">View full résumé</a></p>
   </nav>`;
 }
 
 function resumePage(document, { index = false } = {}) {
   const meta = index ? '' : `<div class="resume-meta"><span>${escapeHTML(document.dates || '')}</span><span>${escapeHTML(document.location || '')}</span>${document.detail ? `<span>${escapeHTML(document.detail)}</span>` : ''}</div>`;
-  const entryList = index ? `<ul class="resume-index">${resumeEntries.map((entry) => `<li><a href="${baseURL}${entry.kind}/${entry.slug}.html"><strong>${escapeHTML(entry.title)}</strong><span>${escapeHTML(entry.summary)}</span><small>${escapeHTML(entry.dates || '')}${entry.location ? ` · ${escapeHTML(entry.location)}` : ''}</small></a></li>`).join('')}</ul>` : '';
+  const entryList = index ? `<h2>Entries</h2><ul class="resume-index">${resumeEntries.map((entry) => `<li><a href="${baseURL}${entry.kind}/${entry.slug}.html">${escapeHTML(entry.title)}</a> — ${escapeHTML(entry.summary)}</li>`).join('')}</ul>` : '';
   return `<!doctype html>
-<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="${escapeHTML(document.summary)}"><title>${escapeHTML(document.title)} — Avery</title><link rel="icon" href="${config.favicon_url}" type="image/jpeg"><link rel="stylesheet" href="${baseURL}assets/portfolio-foundation.css"><link rel="stylesheet" href="${baseURL}notes/notes.css"><link rel="stylesheet" href="${baseURL}assets/resume.css"><script type="module" src="${baseURL}assets/theme.js"></script></head>
-<body class="notes-page resume-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a><a class="notes-home" href="${baseURL}${resume.slug}.html">Résumé</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="resume-shell"><article class="note-article"><header class="note-header"><div class="note-kicker">${index ? 'Résumé' : escapeHTML(document.kind)}</div><h1>${escapeHTML(document.title)}</h1><p class="note-summary">${escapeHTML(document.summary)}</p>${meta}</header><div class="note-body">${document.body}${entryList}</div>${resumeNavigation(index ? '' : document.slug)}</article></main></body></html>`;
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="${escapeHTML(document.summary)}"><title>${escapeHTML(document.title)} — Avery</title><link rel="icon" href="${config.favicon_url}" type="image/jpeg"><link rel="stylesheet" href="${baseURL}assets/portfolio-foundation.css"><link rel="stylesheet" href="${baseURL}notes/notes.css"><link rel="stylesheet" href="${baseURL}assets/resume.css"><script type="module" src="${baseURL}assets/resume.js"></script></head>
+<body class="notes-page resume-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a><a class="notes-home" href="${baseURL}${resume.slug}.html">Résumé</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="resume-shell"><article class="note-article"><header class="note-header"><div class="note-kicker">${index ? 'Résumé' : escapeHTML(document.kind)}</div><h1>${escapeHTML(document.title)}</h1><p class="note-summary">${escapeHTML(document.summary)}</p>${meta}</header><div class="note-body">${document.body}${entryList}</div>${resumeNavigation(index ? '' : document.slug)}${sourceNotice(document)}</article></main></body></html>`;
 }
 
 await mkdir(new URL('./experience/', outputDirectory), { recursive: true });
