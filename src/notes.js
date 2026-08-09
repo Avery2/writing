@@ -58,7 +58,7 @@ function presentationFromURL(length) {
 }
 
 function stateURL(slug = panes.at(-1).noteId) {
-  const url = new URL(`./${slug}.html`, location.href);
+  const url = new URL(noteBySlug.get(slug).url, location.origin);
   const params = [];
   if (panes.length > 1) params.push(`path=${slugs().join('~')}`);
   const open = [];
@@ -160,7 +160,14 @@ function render({ focus = false, announce = true } = {}) {
   bindInteractions();
   const active = panes.at(-1);
   viewportEl.scrollLeft = Math.max(0, active.offset + active.width - viewportEl.clientWidth);
-  document.title = `${noteBySlug.get(active.noteId).title} — Notes — Avery`;
+  const activeDocument = noteBySlug.get(active.noteId);
+  const resumeDocument = ['resume', 'experience', 'education'].includes(activeDocument.kind);
+  document.title = `${activeDocument.title} — ${resumeDocument ? 'Résumé' : 'Notes'} — Avery`;
+  const sectionLink = document.querySelector('.notes-home');
+  if (sectionLink) {
+    sectionLink.href = resumeDocument ? noteBySlug.get('resume').url : noteBySlug.get('notes').url;
+    sectionLink.textContent = resumeDocument ? 'Résumé' : 'Notes';
+  }
   if (focus) (trackEl.querySelector('.stack-pane--active h1') || trackEl.querySelector('.stack-pane--expanded h1'))?.focus({ preventScroll: true });
   if (announce) announcePath();
 }
@@ -195,12 +202,17 @@ function articleHTML(note) {
     ? `<div class="unavailable-note"><p>This concept exists in the public graph, but its writing is not public.</p><p>No private note content is included in this site.</p></div>`
     : linkify(note.body);
   const sourceURL = `https://github.com/Avery2/writing/blob/main/${note.source_path}`;
-  const backLink = note.root_note ? `<a class="content-back-link" href="/">← Back to portfolio</a>` : '';
-  return `<article class="note-article" data-note="${note.slug}">${backLink}<header class="note-header"><div class="note-kicker">${note.root_note ? 'About these notes' : 'Note'} ${status}</div><h1 tabindex="-1">${note.title}</h1><p class="note-summary">${note.summary}</p>${warning}</header><div class="note-body">${body}</div><footer class="writing-source">Generated from <a href="${sourceURL}">Markdown source on GitHub</a>.</footer></article>`;
+  const isResumeDocument = ['resume', 'experience', 'education'].includes(note.kind);
+  const backLink = note.root_note || note.kind === 'resume'
+    ? `<a class="content-back-link" href="/">← Back to portfolio</a>`
+    : isResumeDocument ? `<a class="content-back-link" href="${noteBySlug.get('resume').url}" data-note-link="resume">← Back to experience and education</a>` : '';
+  const kicker = note.root_note ? 'About these notes' : isResumeDocument ? note.kind : 'Note';
+  const meta = isResumeDocument && note.kind !== 'resume' ? `<div class="resume-meta"><span>${note.dates || ''}</span><span>${note.location || ''}</span>${note.detail ? `<span>${note.detail}</span>` : ''}</div>` : '';
+  return `<article class="note-article" data-note="${note.slug}">${backLink}<header class="note-header"><div class="note-kicker">${kicker} ${status}</div><h1 tabindex="-1">${note.title}</h1><p class="note-summary">${note.summary}</p>${meta}${warning}</header><div class="note-body">${body}${note.related_html || ''}</div><footer class="writing-source">Generated from <a href="${sourceURL}">Markdown source on GitHub</a>.</footer></article>`;
 }
 
 function linkify(body = '') {
-  return body.replace(/\[\[([a-z0-9-]+)\|([^\]]+)\]\]/g, (_, slug, label) => `<a href="./${slug}.html" data-note-link="${slug}"${noteBySlug.get(slug)?.unavailable ? ' data-unavailable="true"' : ''}>${label}</a>`);
+  return body.replace(/\[\[([a-z0-9-]+)\|([^\]]+)\]\]/g, (_, slug, label) => `<a href="${noteBySlug.get(slug)?.url}" data-note-link="${slug}"${noteBySlug.get(slug)?.unavailable ? ' data-unavailable="true"' : ''}>${label}</a>`);
 }
 
 function bindInteractions() {

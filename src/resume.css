@@ -10,13 +10,15 @@ body.resume-page { display: block; overflow-x: hidden; overflow-y: auto; }
 .resume-nav a { color: var(--notes-accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--notes-accent) 38%, transparent); text-underline-offset: .18em; }
 .resume-nav a:hover { text-decoration-color: currentColor; }
 .resume-nav a[aria-current="page"] { color: var(--notes-ink); font-weight: 700; }
-.resume-page .note-body h2 { margin: 2.2rem 0 .8rem; font: 500 1.55rem/1.2 Georgia, "Times New Roman", serif; }
-.resume-page .note-body h3 { margin: 1.8rem 0 .7rem; font: 600 1.15rem/1.25 Georgia, "Times New Roman", serif; }
-.resume-page .note-body ul:not(.resume-index) { margin: -.35rem 0 1.6rem; padding-left: 1.25rem; }
-.resume-page .note-body li { margin: .45rem 0; }
-.resume-page .note-body code { padding: .08em .3em; border-radius: .2rem; background: color-mix(in srgb, var(--notes-rule) 35%, transparent); font: .85em/1.2 ui-monospace, monospace; }
+.note-body h2 { margin: 2.2rem 0 .8rem; font: 500 1.55rem/1.2 Georgia, "Times New Roman", serif; }
+.note-body h3 { margin: 1.8rem 0 .7rem; font: 600 1.15rem/1.25 Georgia, "Times New Roman", serif; }
+.note-body ul { margin: -.35rem 0 1.6rem; padding-left: 1.25rem; }
+.note-body li { margin: .45rem 0; }
+.note-body code { padding: .08em .3em; border-radius: .2rem; background: color-mix(in srgb, var(--notes-rule) 35%, transparent); font: .85em/1.2 ui-monospace, monospace; }
 .resume-index { margin: 0 0 1.6rem; padding-left: 1.25rem; }
 .resume-index li { margin: .55rem 0; }
+.resume-related { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--notes-rule); }
+.resume-related p { color: var(--notes-muted); font-size: 1rem; }
 .resume-viewer-shell { width: min(100%, 1180px); margin: 0 auto; padding: clamp(2rem, 4vw, 3.5rem) clamp(1rem, 4vw, 3rem) 4rem; }
 .resume-viewer-header { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.25rem; }
 .resume-viewer-header h1 { margin: .35rem 0 0; color: var(--notes-ink); font: 500 clamp(2.2rem, 5vw, 4rem)/1 Georgia, "Times New Roman", serif; letter-spacing: -.045em; }

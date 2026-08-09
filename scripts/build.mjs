@@ -107,10 +107,19 @@ const { sourceFiles: educationFiles, documents: education } = await loadDocument
 const resume = parseNote(await readFile(new URL('../content/resume.md', import.meta.url), 'utf8'), 'resume.md', 'content/resume.md');
 if (resume.kind !== 'resume' || resume.slug !== config.resume_root) throw new Error('content/resume.md must match the configured resume_root');
 const resumeEntries = [...experiences, ...education];
+const writingDocuments = [...notes, resume, ...resumeEntries];
+
+function publicURL(document) {
+  if (document.kind === 'experience' || document.kind === 'education') return `${baseURL}${document.kind}/${document.slug}.html`;
+  if (document.kind === 'resume') return `${baseURL}${document.slug}.html`;
+  return `${baseURL}notes/${document.slug}.html`;
+}
+
 const noteBySlug = new Map();
-for (const note of notes) {
-  if (noteBySlug.has(note.slug)) throw new Error(`Duplicate slug: ${note.slug}`);
-  noteBySlug.set(note.slug, note);
+for (const document of writingDocuments) {
+  if (noteBySlug.has(document.slug)) throw new Error(`Duplicate slug: ${document.slug}`);
+  document.url = publicURL(document);
+  noteBySlug.set(document.slug, document);
 }
 const rootNote = noteBySlug.get(config.root_note);
 if (!rootNote) throw new Error(`Configured root note does not exist: ${config.root_note}`);
@@ -122,9 +131,16 @@ function linkify(body = '') {
     const target = noteBySlug.get(slug);
     if (!target) throw new Error(`Broken note link: ${slug}`);
     const unavailable = target.unavailable ? ' data-unavailable="true"' : '';
-    return `<a href="./${slug}.html" data-note-link="${slug}"${unavailable}>${label}</a>`;
+    return `<a href="${target.url}" data-note-link="${slug}"${unavailable}>${label}</a>`;
   });
 }
+
+function resumeLinks(activeSlug = '') {
+  return `<section class="resume-related"><h2>More experience and education</h2><ul>${resumeEntries.map((entry) => `<li><a href="${entry.url}" data-note-link="${entry.slug}"${entry.slug === activeSlug ? ' aria-current="page"' : ''}>${escapeHTML(entry.title)}</a></li>`).join('')}</ul><p><a href="${resume.url}" data-note-link="${resume.slug}">Experience and education overview</a> · <a href="${baseURL}resume/full.html">View full résumé</a></p></section>`;
+}
+
+resume.related_html = `<section class="resume-related"><h2>Entries</h2><ul>${resumeEntries.map((entry) => `<li><a href="${entry.url}" data-note-link="${entry.slug}">${escapeHTML(entry.title)}</a> — ${escapeHTML(entry.summary)}</li>`).join('')}</ul><p><a href="${baseURL}resume/full.html">View full résumé</a></p></section>`;
+resumeEntries.forEach((entry) => { entry.related_html = resumeLinks(entry.slug); });
 
 function article(note) {
   const status = note.status === 'published' ? '' : `<span class="note-status note-status--${note.status}">${note.status}</span>`;
@@ -132,16 +148,22 @@ function article(note) {
   const body = note.unavailable
     ? `<div class="unavailable-note"><p>This concept exists in the public graph, but its writing is not public.</p><p>No private note content is included in this site.</p></div>`
     : linkify(note.body);
-  const backLink = note.root_note ? `<a class="content-back-link" href="/">← Back to portfolio</a>` : '';
+  const isResumeDocument = ['resume', 'experience', 'education'].includes(note.kind);
+  const backLink = note.root_note || note.kind === 'resume'
+    ? `<a class="content-back-link" href="/">← Back to portfolio</a>`
+    : isResumeDocument ? `<a class="content-back-link" href="${resume.url}" data-note-link="${resume.slug}">← Back to experience and education</a>` : '';
+  const kicker = note.root_note ? 'About these notes' : isResumeDocument ? note.kind : 'Note';
+  const meta = isResumeDocument && note.kind !== 'resume' ? `<div class="resume-meta"><span>${escapeHTML(note.dates || '')}</span><span>${escapeHTML(note.location || '')}</span>${note.detail ? `<span>${escapeHTML(note.detail)}</span>` : ''}</div>` : '';
   return `<article class="note-article" data-note="${note.slug}">
     ${backLink}
     <header class="note-header">
-      <div class="note-kicker">${note.root_note ? 'About these notes' : 'Note'} ${status}</div>
+      <div class="note-kicker">${escapeHTML(kicker)} ${status}</div>
       <h1 tabindex="-1">${escapeHTML(note.title)}</h1>
       <p class="note-summary">${escapeHTML(note.summary)}</p>
+      ${meta}
       ${warning}
     </header>
-    <div class="note-body">${body}</div>
+    <div class="note-body">${body}${note.related_html || ''}</div>
     ${sourceNotice(note)}
   </article>`;
 }
@@ -160,17 +182,18 @@ function page(note) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="${escapeHTML(note.summary)}">
   ${robots}
-  <title>${escapeHTML(note.title)} — Notes — Avery</title>
+  <title>${escapeHTML(note.title)} — ${['resume', 'experience', 'education'].includes(note.kind) ? 'Résumé' : 'Notes'} — Avery</title>
   ${themeBootstrap}
   <link rel="icon" href="${config.favicon_url}" type="image/jpeg">
   <link rel="stylesheet" href="${baseURL}assets/portfolio-foundation.css">
-  <link rel="stylesheet" href="./notes.css">
-  <script type="module" src="./notes.js"></script>
+  <link rel="stylesheet" href="${baseURL}notes/notes.css">
+  <link rel="stylesheet" href="${baseURL}assets/resume.css">
+  <script type="module" src="${baseURL}notes/notes.js"></script>
 </head>
 <body class="notes-page">
   <header class="notes-site-header">
     <a class="notes-brand" href="/">Avery</a>
-    <a class="notes-home" href="${baseURL}notes/notes.html">Notes</a>
+    <a class="notes-home" href="${['resume', 'experience', 'education'].includes(note.kind) ? resume.url : `${baseURL}notes/notes.html`}">${['resume', 'experience', 'education'].includes(note.kind) ? 'Résumé' : 'Notes'}</a>
     <button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button>
   </header>
   <main id="notes-app" class="notes-app" data-initial-note="${note.slug}">
@@ -182,7 +205,7 @@ function page(note) {
 }
 
 // Validate every graph edge even during check-only runs.
-for (const note of notes) linkify(note.body);
+for (const document of writingDocuments) linkify(document.body);
 
 if (checkOnly) {
   console.log(`Validated ${notes.length} notes and ${files.length + experienceFiles.length + educationFiles.length + 1} Markdown sources.`);
@@ -209,30 +232,10 @@ const publicIndexNotes = notes.filter((note) => !note.unavailable && !note.root_
 const cards = publicIndexNotes.map((note) => `<li><a href="./${note.slug}.html"><strong>${escapeHTML(note.title)}</strong><span>${escapeHTML(note.summary)}</span><small>${note.ai_generated ? 'AI example · ' : ''}${note.status}</small></a></li>`).join('\n');
 await writeFile(new URL('./index.html', notesDirectory), `<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Example notes — Avery</title>${themeBootstrap}<link rel="icon" href="${config.favicon_url}" type="image/jpeg"><link rel="stylesheet" href="${baseURL}assets/portfolio-foundation.css"><link rel="stylesheet" href="./notes.css"><script type="module" src="./notes-index.js"></script></head><body class="notes-page notes-index-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a><a class="notes-home" href="./notes.html">Notes</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="notes-index"><header><p class="note-kicker">AI-generated prototype corpus</p><h1>Seeing and navigating information</h1><p>Substantive example writing created to test the linked-notes interaction. This is not presented as Avery’s published writing.</p></header><ul>${cards}</ul></main></body></html>`);
 
-await writeFile(new URL('./corpus.generated.mjs', notesDirectory), `// Generated by scripts/build.mjs from content/notes/*.md. Do not edit directly.\nexport const notes = ${JSON.stringify(notes, null, 2)};\nexport const noteBySlug = new Map(notes.map((note) => [note.slug, note]));\n`);
+await writeFile(new URL('./corpus.generated.mjs', notesDirectory), `// Generated by scripts/build.mjs from content/**/*.md. Do not edit directly.\nexport const notes = ${JSON.stringify(writingDocuments, null, 2)};\nexport const noteBySlug = new Map(notes.map((note) => [note.slug, note]));\n`);
 
-const manifest = notes.map(({ body, ...metadata }) => ({ ...metadata, url: `${baseURL}notes/${metadata.slug}.html` }));
+const manifest = writingDocuments.map(({ body, ...metadata }) => metadata);
 await writeFile(new URL('./manifest.json', outputDirectory), `${JSON.stringify({ generated_at: new Date().toISOString(), notes: manifest }, null, 2)}\n`);
-
-function resumeNavigation(activeSlug = '') {
-  const links = resumeEntries.map((entry) => {
-    const current = entry.slug === activeSlug ? ' aria-current="page"' : '';
-    return `<li><a href="${baseURL}${entry.kind}/${entry.slug}.html"${current}>${escapeHTML(entry.title)}</a></li>`;
-  }).join('');
-  return `<nav class="resume-nav" aria-label="Experience and education">
-    <h2>More experience and education</h2>
-    <ul>${links}</ul>
-    <p><a href="${baseURL}${resume.slug}.html">Experience and education overview</a> · <a href="${baseURL}resume/full.html">View full résumé</a></p>
-  </nav>`;
-}
-
-function resumePage(document, { index = false } = {}) {
-  const meta = index ? '' : `<div class="resume-meta"><span>${escapeHTML(document.dates || '')}</span><span>${escapeHTML(document.location || '')}</span>${document.detail ? `<span>${escapeHTML(document.detail)}</span>` : ''}</div>`;
-  const entryList = index ? `<h2>Entries</h2><ul class="resume-index">${resumeEntries.map((entry) => `<li><a href="${baseURL}${entry.kind}/${entry.slug}.html">${escapeHTML(entry.title)}</a> — ${escapeHTML(entry.summary)}</li>`).join('')}</ul>` : '';
-  return `<!doctype html>
-<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="${escapeHTML(document.summary)}"><title>${escapeHTML(document.title)} — Avery</title>${themeBootstrap}<link rel="icon" href="${config.favicon_url}" type="image/jpeg"><link rel="stylesheet" href="${baseURL}assets/portfolio-foundation.css"><link rel="stylesheet" href="${baseURL}notes/notes.css"><link rel="stylesheet" href="${baseURL}assets/resume.css"><script type="module" src="${baseURL}assets/resume.js"></script></head>
-<body class="notes-page resume-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a><a class="notes-home" href="${baseURL}${resume.slug}.html">Résumé</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="resume-shell"><article class="note-article"><a class="content-back-link" href="${index ? '/' : `${baseURL}${resume.slug}.html`}">← ${index ? 'Back to portfolio' : 'Back to experience and education'}</a><header class="note-header"><div class="note-kicker">${index ? 'Résumé' : escapeHTML(document.kind)}</div><h1>${escapeHTML(document.title)}</h1><p class="note-summary">${escapeHTML(document.summary)}</p>${meta}</header><div class="note-body">${document.body}${entryList}</div>${resumeNavigation(index ? '' : document.slug)}${sourceNotice(document)}</article></main></body></html>`;
-}
 
 function fullResumePage() {
   return `<!doctype html>
@@ -242,8 +245,8 @@ function fullResumePage() {
 
 await mkdir(new URL('./experience/', outputDirectory), { recursive: true });
 await mkdir(new URL('./education/', outputDirectory), { recursive: true });
-await Promise.all(resumeEntries.map((entry) => writeFile(new URL(`./${entry.kind}/${entry.slug}.html`, outputDirectory), resumePage(entry))));
-await writeFile(new URL(`./${resume.slug}.html`, outputDirectory), resumePage(resume, { index: true }));
+await Promise.all(resumeEntries.map((entry) => writeFile(new URL(`./${entry.kind}/${entry.slug}.html`, outputDirectory), page(entry))));
+await writeFile(new URL(`./${resume.slug}.html`, outputDirectory), page(resume));
 await mkdir(new URL('./resume/', outputDirectory), { recursive: true });
 await writeFile(new URL('./resume/full.html', outputDirectory), fullResumePage());
 
@@ -257,4 +260,4 @@ for (const [legacyPath, destination] of Object.entries(config.legacy_redirects |
   await writeFile(new URL(`./${legacyPath}`, outputDirectory), redirectPage(`${baseURL}${destination}`, noteBySlug.get(destination.split('/').at(-1).replace('.html', ''))?.title || 'Writing'));
 }
 
-console.log(`Built ${notes.length} notes to ${outputPath} with base ${baseURL}`);
+console.log(`Built ${writingDocuments.length} writing nodes to ${outputPath} with base ${baseURL}`);

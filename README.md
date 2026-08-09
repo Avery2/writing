@@ -69,7 +69,7 @@ The graph may be disconnected. A public note does not need to appear in an index
 
 ## Experience and education
 
-Professional entries use the same Markdown/YAML pipeline. Put experience in `content/experience/`, education in `content/education/`, and edit `content/resume.md` for the shared overview. Entry frontmatter adds `kind`, `location`, `dates`, and optionally `detail`. The compiler generates every entry with quick links to the complete set, the overview, and the PDF résumé configured by `full_resume_url`.
+Professional entries are first-class nodes in the same linked-reading runtime as notes. Put experience in `content/experience/`, education in `content/education/`, and edit `content/resume.md` for the shared overview. Entry frontmatter adds `kind`, `location`, `dates`, and optionally `detail`. The compiler preserves their `/writing/experience/` and `/writing/education/` URLs while links between them accumulate the same spatial pane history. The full PDF remains a specialized viewer backed by the `normal-resume` repository.
 
 ## Privacy boundary
 
