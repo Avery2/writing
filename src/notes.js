@@ -3,6 +3,7 @@ import { noteBySlug } from './corpus.generated.mjs';
 
 const app = document.querySelector('#notes-app');
 const initialSlug = app?.dataset.initialNote;
+const enteredFromPortfolio = new URL(location.href).searchParams.get('from') === 'portfolio';
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let panes = [];
 let expandedDepth = 0;
@@ -61,6 +62,7 @@ function stateURL(slug = panes.at(-1).noteId) {
   const url = new URL(noteBySlug.get(slug).url, location.origin);
   const params = [];
   if (panes.length > 1) params.push(`path=${slugs().join('~')}`);
+  if (enteredFromPortfolio) params.push('from=portfolio');
   const open = [];
   if (expandedDepth !== null) open.push(String(expandedDepth + 1));
   if (currentExpanded) open.push('last');
@@ -203,9 +205,7 @@ function articleHTML(note) {
     : linkify(note.body);
   const sourceURL = `https://github.com/Avery2/writing/blob/main/${note.source_path}`;
   const isResumeDocument = ['resume', 'experience', 'education'].includes(note.kind);
-  const backLink = note.root_note || note.kind === 'resume'
-    ? `<a class="content-back-link" href="/">← Back to portfolio</a>`
-    : isResumeDocument ? `<a class="content-back-link" href="${noteBySlug.get('resume').url}" data-note-link="resume">← Back to experience and education</a>` : '';
+  const backLink = enteredFromPortfolio ? `<a class="content-back-link" href="/">← Back to portfolio</a>` : '';
   const kicker = note.root_note ? 'About these notes' : isResumeDocument ? note.kind : 'Note';
   const meta = isResumeDocument && note.kind !== 'resume' ? `<div class="resume-meta"><span>${note.dates || ''}</span><span>${note.location || ''}</span>${note.detail ? `<span>${note.detail}</span>` : ''}</div>` : '';
   return `<article class="note-article" data-note="${note.slug}">${backLink}<header class="note-header"><div class="note-kicker">${kicker} ${status}</div><h1 tabindex="-1">${note.title}</h1><p class="note-summary">${note.summary}</p>${meta}${warning}</header><div class="note-body">${body}${note.related_html || ''}</div><footer class="writing-source">Generated from <a href="${sourceURL}">Markdown source on GitHub</a>.</footer></article>`;

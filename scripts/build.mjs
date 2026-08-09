@@ -136,7 +136,7 @@ function linkify(body = '') {
 }
 
 function resumeLinks(activeSlug = '') {
-  return `<section class="resume-related"><h2>More experience and education</h2><ul>${resumeEntries.map((entry) => `<li><a href="${entry.url}" data-note-link="${entry.slug}"${entry.slug === activeSlug ? ' aria-current="page"' : ''}>${escapeHTML(entry.title)}</a></li>`).join('')}</ul><p><a href="${resume.url}" data-note-link="${resume.slug}">Experience and education overview</a> · <a href="${baseURL}resume/full.html">View full résumé</a></p></section>`;
+  return `<section class="resume-related"><h2>More experience and education</h2><ul>${resumeEntries.filter((entry) => entry.slug !== activeSlug).map((entry) => `<li><a href="${entry.url}" data-note-link="${entry.slug}">${escapeHTML(entry.title)}</a></li>`).join('')}</ul><p><a href="${baseURL}resume/full.html">View full résumé</a></p></section>`;
 }
 
 resume.related_html = `<section class="resume-related"><h2>Entries</h2><ul>${resumeEntries.map((entry) => `<li><a href="${entry.url}" data-note-link="${entry.slug}">${escapeHTML(entry.title)}</a> — ${escapeHTML(entry.summary)}</li>`).join('')}</ul><p><a href="${baseURL}resume/full.html">View full résumé</a></p></section>`;
@@ -149,9 +149,7 @@ function article(note) {
     ? `<div class="unavailable-note"><p>This concept exists in the public graph, but its writing is not public.</p><p>No private note content is included in this site.</p></div>`
     : linkify(note.body);
   const isResumeDocument = ['resume', 'experience', 'education'].includes(note.kind);
-  const backLink = note.root_note || note.kind === 'resume'
-    ? `<a class="content-back-link" href="/">← Back to portfolio</a>`
-    : isResumeDocument ? `<a class="content-back-link" href="${resume.url}" data-note-link="${resume.slug}">← Back to experience and education</a>` : '';
+  const backLink = '';
   const kicker = note.root_note ? 'About these notes' : isResumeDocument ? note.kind : 'Note';
   const meta = isResumeDocument && note.kind !== 'resume' ? `<div class="resume-meta"><span>${escapeHTML(note.dates || '')}</span><span>${escapeHTML(note.location || '')}</span>${note.detail ? `<span>${escapeHTML(note.detail)}</span>` : ''}</div>` : '';
   return `<article class="note-article" data-note="${note.slug}">
