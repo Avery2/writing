@@ -152,6 +152,7 @@ function condenseCompactRuns(compactWidth) {
 }
 
 function render({ focus = false, announce = true } = {}) {
+  document.querySelector('.media-lightbox')?.remove();
   panes.forEach((pane, index) => { pane.depth = index; });
   const { trackWidth } = computePresentation();
   const viewportEl = app.querySelector('.stack-viewport');
@@ -224,6 +225,7 @@ function linkify(body = '') {
 }
 
 function bindInteractions() {
+  enhanceOutboundContent();
   app.querySelectorAll('.pane-return[data-depth]').forEach((button) => button.addEventListener('click', () => expandPane(Number(button.dataset.depth))));
   app.querySelectorAll('[data-expand-history]').forEach((button) => button.addEventListener('click', expandHistory));
   app.querySelectorAll('[data-collapse-history]').forEach((button) => button.addEventListener('click', collapseHistory));
@@ -248,6 +250,65 @@ function bindInteractions() {
       navigateBack(panes.length - 2);
     }
   });
+}
+
+function enhanceOutboundContent() {
+  app.querySelectorAll('.note-body a[href], .writing-source a[href], .project-links a[href]').forEach((link) => {
+    if (link.hasAttribute('data-note-link')) return;
+    const url = new URL(link.href, location.href);
+    if (url.origin === location.origin) return;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.dataset.externalLink = 'true';
+    link.title ||= 'Opens in a new tab';
+    if (!link.querySelector('.external-link-note')) {
+      link.insertAdjacentHTML('beforeend', '<span class="external-link-note sr-only"> (opens in a new tab)</span>');
+    }
+  });
+
+  app.querySelectorAll('.note-body img').forEach((image) => {
+    const linkedImage = image.closest('a[href]');
+    image.classList.add('lightbox-image');
+    const trigger = linkedImage || image;
+    trigger.setAttribute('aria-label', `${image.alt || 'Image'} — enlarge image`);
+    if (!linkedImage) {
+      image.tabIndex = 0;
+      image.setAttribute('role', 'button');
+    }
+    const open = (event) => {
+      if (event.type === 'keydown' && !['Enter', ' '].includes(event.key)) return;
+      event.preventDefault();
+      openImageLightbox(image, linkedImage?.href || image.currentSrc || image.src);
+    };
+    trigger.addEventListener('click', open);
+    if (!linkedImage) image.addEventListener('keydown', open);
+  });
+}
+
+function openImageLightbox(image, originalURL) {
+  document.querySelector('.media-lightbox')?.remove();
+  const dialog = document.createElement('dialog');
+  dialog.className = 'media-lightbox';
+  dialog.setAttribute('aria-label', image.alt ? `Image: ${image.alt}` : 'Image preview');
+  dialog.innerHTML = `
+    <div class="media-lightbox-toolbar">
+      <a href="${escapeHTML(originalURL)}" target="_blank" rel="noopener noreferrer">Open original<span class="sr-only"> in a new tab</span></a>
+      <button type="button" aria-label="Close image preview">×</button>
+    </div>
+    <div class="media-lightbox-stage">
+      <img src="${escapeHTML(image.currentSrc || image.src)}" alt="${escapeHTML(image.alt || '')}">
+    </div>`;
+  dialog.querySelector('button').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+  dialog.addEventListener('close', () => dialog.remove());
+  document.body.append(dialog);
+  dialog.showModal();
+}
+
+function escapeHTML(value = '') {
+  return String(value).replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[character]);
 }
 
 function openNote(slug, sourceDepth = panes.length - 1) {
