@@ -1,31 +1,31 @@
 :root {
-  --notes-paper: #fbfaf7;
-  --notes-ink: #24231f;
-  --notes-muted: #706d65;
-  --notes-rule: #d8d4ca;
-  --notes-accent: #b95823;
-  --notes-header-height: 58px;
+  --notes-paper: var(--bg-primary);
+  --notes-ink: var(--text-primary);
+  --notes-muted: var(--text-secondary);
+  --notes-rule: var(--border-color);
+  --notes-accent: var(--accent-primary);
+  --notes-header-height: 72px;
   --writing-shell-gutter: clamp(1.25rem, 4vw, 3rem);
 }
 
 [data-theme="dark"] {
-  --notes-paper: #232321;
-  --notes-ink: #f0eee8;
-  --notes-muted: #aaa69c;
-  --notes-rule: #484740;
-  --notes-accent: #ef965b;
+  color-scheme: dark;
 }
 
 body.notes-page { background: var(--notes-paper); color: var(--notes-ink); overflow: hidden; }
 
 .notes-site-header {
-  height: var(--notes-header-height); display: flex; align-items: center; gap: 1.25rem;
-  padding: 0 var(--writing-shell-gutter); border-bottom: 1px solid var(--notes-rule); background: var(--notes-paper);
+  position: relative; z-index: 100; height: var(--notes-header-height); display: flex; align-items: center; gap: 1.25rem;
+  padding: 0 var(--writing-shell-gutter); border-bottom: 1px solid var(--notes-rule);
+  background: color-mix(in srgb, var(--notes-paper) 94%, transparent); backdrop-filter: blur(10px);
 }
 
-.notes-brand { color: var(--notes-ink); font-weight: 750; letter-spacing: -.03em; }
+.notes-brand { color: var(--notes-ink); font-size: 1.5rem; font-weight: 750; letter-spacing: -.03em; line-height: 1; }
+.notes-brand:hover { color: var(--notes-accent); text-decoration: none; }
 .notes-home { color: var(--notes-muted); font-size: .9rem; }
-.notes-theme { margin-left: auto; color: var(--notes-ink); font-size: 1.15rem; }
+.notes-home:hover { color: var(--notes-ink); text-decoration: none; }
+.notes-theme { display: grid; width: 40px; height: 40px; margin-left: auto; place-items: center; border: 1px solid var(--notes-rule); border-radius: 50%; background: var(--bg-secondary); color: var(--notes-ink); font-size: 1.15rem; }
+.notes-theme:hover { border-color: var(--notes-accent); background: var(--notes-accent); color: white; }
 .notes-app { height: calc(100dvh - var(--notes-header-height)); width: 100%; }
 .baseline-note { height: 100%; overflow-y: auto; }
 
@@ -116,8 +116,10 @@ body.notes-page { background: var(--notes-paper); color: var(--notes-ink); overf
 @keyframes note-reveal { from { opacity: .6; transform: translateX(-14px); } }
 
 @media (max-width: 639px) {
-  :root { --notes-header-height: 52px; }
+  :root { --notes-header-height: 64px; }
   .notes-site-header { padding-inline: var(--writing-shell-gutter); }
+  .notes-brand { font-size: 1.25rem; }
+  .notes-theme { width: 36px; height: 36px; }
   .note-article { padding: 2rem var(--writing-shell-gutter) 6rem; }
   .note-header h1 { font-size: clamp(2.25rem, 12vw, 3.5rem); }
   .note-body { font-size: 1.08rem; }

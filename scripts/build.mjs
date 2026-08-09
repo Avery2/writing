@@ -20,7 +20,7 @@ const outputDirectory = pathToFileURL(`${outputPath}/`);
 const notesDirectory = new URL('./notes/', outputDirectory);
 const assetsDirectory = new URL('./assets/', outputDirectory);
 const baseURL = normalizeBase(argumentValue('--base-url', config.base_url));
-const themeBootstrap = `<script>try{const t=sessionStorage.getItem('site-theme-override');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}</script><style>html{background:#fbfaf7}html[data-theme="dark"]{background:#232321}</style>`;
+const themeBootstrap = `<script>try{const t=sessionStorage.getItem('site-theme-override');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}</script><style>html{background:#f4f1eb}html[data-theme="dark"]{background:#111214}</style>`;
 
 function normalizeBase(value) {
   return `/${value.replace(/^\/+|\/+$/g, '')}/`;
