@@ -29,6 +29,8 @@ body.notes-page { background: var(--notes-paper); color: var(--notes-ink); overf
 .baseline-note { height: 100%; overflow-y: auto; }
 
 .note-article { width: min(100%, 780px); margin: 0 auto; padding: clamp(2rem, 5vw, 5rem) clamp(1.35rem, 5vw, 4rem) 7rem; }
+.content-back-link { display: inline-flex; align-items: center; margin-bottom: 2rem; color: var(--notes-muted); font-size: .82rem; }
+.content-back-link:hover { color: var(--notes-accent); text-decoration: none; }
 .note-header { padding-bottom: 2rem; margin-bottom: 2rem; border-bottom: 1px solid var(--notes-rule); }
 .note-kicker { min-height: 1.5rem; color: var(--notes-muted); font-size: .72rem; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
 .note-header h1 { margin: .5rem 0 .8rem; color: var(--notes-ink); font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2.4rem, 5vw, 4.8rem); font-weight: 500; letter-spacing: -.045em; line-height: .98; }

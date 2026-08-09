@@ -131,7 +131,9 @@ function article(note) {
   const body = note.unavailable
     ? `<div class="unavailable-note"><p>This concept exists in the public graph, but its writing is not public.</p><p>No private note content is included in this site.</p></div>`
     : linkify(note.body);
+  const backLink = note.root_note ? `<a class="content-back-link" href="/">← Back to portfolio</a>` : '';
   return `<article class="note-article" data-note="${note.slug}">
+    ${backLink}
     <header class="note-header">
       <div class="note-kicker">${note.root_note ? 'About these notes' : 'Note'} ${status}</div>
       <h1 tabindex="-1">${escapeHTML(note.title)}</h1>
@@ -227,7 +229,7 @@ function resumePage(document, { index = false } = {}) {
   const entryList = index ? `<h2>Entries</h2><ul class="resume-index">${resumeEntries.map((entry) => `<li><a href="${baseURL}${entry.kind}/${entry.slug}.html">${escapeHTML(entry.title)}</a> — ${escapeHTML(entry.summary)}</li>`).join('')}</ul>` : '';
   return `<!doctype html>
 <html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="${escapeHTML(document.summary)}"><title>${escapeHTML(document.title)} — Avery</title><link rel="icon" href="${config.favicon_url}" type="image/jpeg"><link rel="stylesheet" href="${baseURL}assets/portfolio-foundation.css"><link rel="stylesheet" href="${baseURL}notes/notes.css"><link rel="stylesheet" href="${baseURL}assets/resume.css"><script type="module" src="${baseURL}assets/resume.js"></script></head>
-<body class="notes-page resume-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a><a class="notes-home" href="${baseURL}${resume.slug}.html">Résumé</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="resume-shell"><article class="note-article"><header class="note-header"><div class="note-kicker">${index ? 'Résumé' : escapeHTML(document.kind)}</div><h1>${escapeHTML(document.title)}</h1><p class="note-summary">${escapeHTML(document.summary)}</p>${meta}</header><div class="note-body">${document.body}${entryList}</div>${resumeNavigation(index ? '' : document.slug)}${sourceNotice(document)}</article></main></body></html>`;
+<body class="notes-page resume-page"><header class="notes-site-header"><a class="notes-brand" href="/">Avery</a><a class="notes-home" href="${baseURL}${resume.slug}.html">Résumé</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header><main class="resume-shell"><article class="note-article"><a class="content-back-link" href="${index ? '/' : `${baseURL}${resume.slug}.html`}">← ${index ? 'Back to portfolio' : 'Back to experience and education'}</a><header class="note-header"><div class="note-kicker">${index ? 'Résumé' : escapeHTML(document.kind)}</div><h1>${escapeHTML(document.title)}</h1><p class="note-summary">${escapeHTML(document.summary)}</p>${meta}</header><div class="note-body">${document.body}${entryList}</div>${resumeNavigation(index ? '' : document.slug)}${sourceNotice(document)}</article></main></body></html>`;
 }
 
 await mkdir(new URL('./experience/', outputDirectory), { recursive: true });
