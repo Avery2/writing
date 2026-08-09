@@ -1,0 +1,26 @@
+name: Check writing build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm run check
+      - run: npm run build
+      - name: Verify private bodies and source files are absent
+        run: |
+          test ! -d dist/writing/notes/content
+          node -e "import('./dist/writing/notes/corpus.generated.mjs').then(({notes}) => { if (notes.some((note) => note.status === 'private' && note.body)) process.exit(1) })"
+

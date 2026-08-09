@@ -1,9 +1,3 @@
 .DS_Store
-.env
-env/
-__pycache__
-data
-.vscode/
-daily_notes/
-.obsidian/
-explore
+dist/
+node_modules/
