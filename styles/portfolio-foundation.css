@@ -33,11 +33,4 @@ body { min-height: 100%; background: var(--bg-primary); color: var(--text-primar
 a { color: var(--accent-primary); text-decoration: none; }
 button { border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
 a:focus-visible, button:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
-.site-section-nav { display: flex; min-width: 0; align-items: center; gap: .75rem; overflow-x: auto; scrollbar-width: none; }
-.site-section-nav::-webkit-scrollbar { display: none; }
-.site-section-nav a, .site-section-nav button { position: relative; flex: 0 0 auto; padding: .375rem .25rem .5rem; color: var(--text-secondary); font-family: inherit; font-size: .875rem; font-weight: 500; line-height: 1.2; text-decoration: none; white-space: nowrap; }
-.site-section-nav a::after, .site-section-nav button::after { content: ''; position: absolute; right: .25rem; bottom: 0; left: .25rem; height: 2px; background: transparent; }
-.site-section-nav a:hover, .site-section-nav button:hover, .site-section-nav [aria-current="page"] { color: var(--text-primary); text-decoration: none; }
-.site-section-nav [aria-current="page"]::after, .site-section-nav a:focus-visible::after, .site-section-nav button:focus-visible::after { background: var(--accent-primary); }
-.site-section-nav a:focus-visible, .site-section-nav button:focus-visible { outline: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }

@@ -3,7 +3,6 @@ import { initTheme } from '../assets/theme.js';
 const app = document.querySelector('#notes-app');
 const { noteBySlug } = await import(app?.dataset.corpus || './corpus.generated.mjs');
 const initialSlug = app?.dataset.initialNote;
-const enteredFromPortfolio = new URL(location.href).searchParams.get('from') === 'portfolio';
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let panes = [];
 let expandedDepth = 0;
@@ -62,7 +61,6 @@ function stateURL(slug = panes.at(-1).noteId) {
   const url = new URL(noteBySlug.get(slug).url, location.origin);
   const params = [];
   if (panes.length > 1) params.push(`path=${slugs().join('~')}`);
-  if (enteredFromPortfolio) params.push('from=portfolio');
   const open = [];
   if (expandedDepth !== null) open.push(String(expandedDepth + 1));
   if (currentExpanded) open.push('last');
@@ -119,13 +117,22 @@ function computePresentation() {
   const compactWidth = panes.reduce((sum, pane) => sum + (pane.expanded ? 0 : pane.width), 0);
   const minimumReader = mobile ? Math.max(280, viewport - compact) : 440;
   const availableForReaders = viewport - compactWidth;
-  const readerWidth = Math.max(minimumReader, availableForReaders / expandedIndexes.length);
+  const singleReader = !mobile && expandedIndexes.length === 1;
+  const maximumSingleReader = 960;
+  const readerWidth = singleReader
+    ? Math.max(minimumReader, Math.min(maximumSingleReader, availableForReaders))
+    : Math.max(minimumReader, availableForReaders / expandedIndexes.length);
+  const readerBreathingRoom = singleReader
+    ? Math.max(0, (availableForReaders - readerWidth) / 2)
+    : 0;
 
   panes.forEach((pane) => { if (pane.expanded) pane.width = readerWidth; });
   let offset = 0;
   panes.forEach((pane) => {
+    if (pane.expanded) offset += readerBreathingRoom;
     pane.offset = offset;
     offset += pane.width;
+    if (pane.expanded) offset += readerBreathingRoom;
   });
   return { trackWidth: Math.max(viewport, offset), mobile };
 }
@@ -168,15 +175,6 @@ function render({ focus = false, announce = true } = {}) {
   const projectDocument = activeDocument.kind === 'project' || activeDocument.kind === 'projects';
   const sectionTitle = resumeDocument ? 'Résumé' : projectDocument ? 'Projects' : 'Notes';
   document.title = `${activeDocument.title} — ${sectionTitle} — Avery`;
-  const activeSection = resumeDocument
-    ? 'experience'
-    : projectDocument
-      ? 'projects'
-      : ['find-me', 'links'].includes(activeDocument.slug) ? 'links' : 'writing';
-  document.querySelectorAll('.site-section-nav [data-section]').forEach(link => {
-    if (link.dataset.section === activeSection) link.setAttribute('aria-current', 'page');
-    else link.removeAttribute('aria-current');
-  });
   if (focus) (trackEl.querySelector('.stack-pane--active h1') || trackEl.querySelector('.stack-pane--expanded h1'))?.focus({ preventScroll: true });
   if (announce) announcePath();
 }
@@ -213,14 +211,13 @@ function articleHTML(note) {
   const sourceURL = `https://github.com/Avery2/writing/blob/main/${note.source_path}`;
   const isResumeDocument = ['resume', 'experience', 'education'].includes(note.kind);
   const isProjectDocument = ['project', 'projects'].includes(note.kind);
-  const backLink = enteredFromPortfolio && note.slug === initialSlug ? `<a class="content-back-link" href="/">← Back to portfolio</a>` : '';
   const kicker = note.root_note ? 'About these notes' : isResumeDocument || isProjectDocument ? note.kind : 'Note';
   const meta = isResumeDocument && note.kind !== 'resume' ? `<div class="resume-meta"><span>${note.dates || ''}</span><span>${note.location || ''}</span>${note.detail ? `<span>${note.detail}</span>` : ''}</div>` : '';
   const projectMeta = isProjectDocument ? `${note.project_stats_html || ''}${note.project_actions_html || ''}` : '';
   const provenance = isProjectDocument
     ? `<footer class="writing-source">${note.provenance_html || `README synced from <a href="${note.repo_url || 'https://github.com/Avery2'}">GitHub</a>${note.synced_on ? ` on ${note.synced_on}` : ''}.`}</footer>`
     : `<footer class="writing-source">Generated from <a href="${sourceURL}">Markdown source on GitHub</a>.</footer>`;
-  return `<article class="note-article" data-note="${note.slug}">${backLink}<header class="note-header"><div class="note-kicker">${kicker} ${status}</div><h1 tabindex="-1">${note.title}</h1><p class="note-summary">${note.summary}</p>${meta}${warning}${projectMeta}</header><div class="note-body">${body}${note.related_html || ''}</div>${provenance}</article>`;
+  return `<article class="note-article" data-note="${note.slug}"><header class="note-header"><div class="note-kicker">${kicker} ${status}</div><h1 tabindex="-1">${note.title}</h1><p class="note-summary">${note.summary}</p>${meta}${warning}${projectMeta}</header><div class="note-body">${body}${note.related_html || ''}</div>${provenance}</article>`;
 }
 
 function linkify(body = '') {

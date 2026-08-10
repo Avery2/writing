@@ -21,7 +21,8 @@ body.notes-page { background: var(--notes-paper); color: var(--notes-ink); overf
 
 .notes-brand { color: var(--notes-ink); font-size: 1.5rem; font-weight: 750; letter-spacing: -.03em; line-height: 1; }
 .notes-brand:hover { color: var(--notes-accent); text-decoration: none; }
-.notes-site-header .site-section-nav { flex: 1; }
+.notes-mode-link { padding: .4rem .65rem; border: 1px solid var(--notes-rule); border-radius: 8px; background: var(--bg-secondary); color: var(--notes-muted); font-size: .875rem; font-weight: 500; }
+.notes-mode-link:hover { border-color: var(--notes-accent); color: var(--notes-accent); text-decoration: none; }
 .notes-theme { display: grid; width: 40px; height: 40px; margin-left: auto; place-items: center; border: 1px solid var(--notes-rule); border-radius: 50%; background: var(--bg-secondary); color: var(--notes-ink); font-size: 1.15rem; }
 .notes-theme:hover { border-color: var(--notes-accent); background: var(--notes-accent); color: white; }
 .notes-app { height: calc(100dvh - var(--notes-header-height)); width: 100%; }
