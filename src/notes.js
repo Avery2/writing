@@ -117,22 +117,13 @@ function computePresentation() {
   const compactWidth = panes.reduce((sum, pane) => sum + (pane.expanded ? 0 : pane.width), 0);
   const minimumReader = mobile ? Math.max(280, viewport - compact) : 440;
   const availableForReaders = viewport - compactWidth;
-  const singleReader = !mobile && expandedIndexes.length === 1;
-  const maximumSingleReader = 960;
-  const readerWidth = singleReader
-    ? Math.max(minimumReader, Math.min(maximumSingleReader, availableForReaders))
-    : Math.max(minimumReader, availableForReaders / expandedIndexes.length);
-  const readerBreathingRoom = singleReader
-    ? Math.max(0, (availableForReaders - readerWidth) / 2)
-    : 0;
+  const readerWidth = Math.max(minimumReader, availableForReaders / expandedIndexes.length);
 
   panes.forEach((pane) => { if (pane.expanded) pane.width = readerWidth; });
   let offset = 0;
   panes.forEach((pane) => {
-    if (pane.expanded) offset += readerBreathingRoom;
     pane.offset = offset;
     offset += pane.width;
-    if (pane.expanded) offset += readerBreathingRoom;
   });
   return { trackWidth: Math.max(viewport, offset), mobile };
 }
