@@ -99,7 +99,7 @@ function paneVias() { return panes.slice(1).map((pane) => pane.via); }
 function computePresentation() {
   const viewport = app.clientWidth || innerWidth;
   const mobile = viewport < 640;
-  const compact = mobile ? 0 : 72;
+  const compact = mobile ? 0 : 40;
   const currentIndex = panes.length - 1;
   expandedDepth = validExpandedDepth(expandedDepth, panes.length);
   let expandedIndexes = [];
@@ -195,7 +195,7 @@ function paneHTML(pane) {
   const context = transitionContext(pane.depth);
   const paneContent = pane.expanded
     ? articleHTML(note)
-    : `<div class="pane-label"><span class="history-depth">${String(pane.depth + 1).padStart(2, '0')}</span><strong class="pane-title">${escapeHTML(note.title)}</strong>${context ? `<span class="pane-context">${escapeHTML(context.before)}<b>${escapeHTML(context.label)}</b>${escapeHTML(context.after)}</span>` : ''}</div>`;
+    : `<div class="pane-label"><span class="history-depth">${String(pane.depth + 1).padStart(2, '0')}</span><span class="pane-copy"><strong class="pane-title">${escapeHTML(note.title)}</strong>${context ? `<span class="pane-context"><span aria-hidden="true"> — </span>${escapeHTML(context.before)}<b>${escapeHTML(context.label)}</b>${escapeHTML(context.after)}</span>` : ''}</span></div>`;
   const content = pane.expanded ? paneContent : `<div class="pane-inactive-content" aria-hidden="true">${paneContent}</div>`;
   const returnControl = pane.expanded ? '' : `<button class="pane-return" data-depth="${pane.depth}" aria-label="Open ${note.title} beside the current note, step ${pane.depth + 1} of ${panes.length}"></button>`;
   const closeControl = pane.depth > 0
