@@ -172,7 +172,7 @@ function sourceNotice(document) {
 }
 
 function writingHeader() {
-  return `<header class="notes-site-header"><a class="notes-brand" href="${baseURL}notes/writing.html?path=writing&open=last">Avery’s Writing</a><a class="notes-mode-link" href="/">Portfolio</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header>`;
+  return `<header class="notes-site-header"><a class="notes-brand" href="${baseURL}notes/writing.html?path=writing&open=last">Avery’s Writing</a><a class="notes-mode-link" href="/">Back to portfolio</a><button id="theme-toggle" class="notes-theme" type="button" aria-label="Toggle color theme">◐</button></header>`;
 }
 
 function page(note) {
