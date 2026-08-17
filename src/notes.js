@@ -195,7 +195,7 @@ function paneHTML(pane) {
   const context = transitionContext(pane.depth);
   const paneContent = pane.expanded
     ? articleHTML(note)
-    : `<div class="pane-label"><span class="history-depth">${String(pane.depth + 1).padStart(2, '0')}</span><span class="pane-copy"><strong class="pane-title">${escapeHTML(note.title)}</strong>${context ? `<span class="pane-context"><span aria-hidden="true"> — </span>${escapeHTML(context.before)}<b>${escapeHTML(context.label)}</b>${escapeHTML(context.after)}</span>` : ''}</span></div>`;
+    : `<div class="pane-label"><span class="history-depth">${String(pane.depth + 1).padStart(2, '0')}</span><span class="pane-copy"><strong class="pane-title">${escapeHTML(note.title)}</strong>${context ? `<span class="pane-context"><span aria-hidden="true"> — via </span><b>${escapeHTML(context.label)}</b></span>` : ''}</span></div>`;
   const content = pane.expanded ? paneContent : `<div class="pane-inactive-content" aria-hidden="true">${paneContent}</div>`;
   const returnControl = pane.expanded ? '' : `<button class="pane-return" data-depth="${pane.depth}" aria-label="Open ${note.title} beside the current note, step ${pane.depth + 1} of ${panes.length}"></button>`;
   const closeControl = pane.depth > 0
@@ -225,24 +225,7 @@ function transitionContext(depth) {
   container.innerHTML = articleHTML(noteBySlug.get(panes[depth].noteId));
   const link = container.querySelectorAll('[data-note-link]')[destination.via];
   if (!link || link.dataset.noteLink !== destination.noteId) return null;
-  const block = link.closest('p, li, blockquote') || link.parentElement;
-  if (!block) return null;
-  const range = document.createRange();
-  range.setStart(block, 0);
-  range.setEndBefore(link);
-  const full = block.textContent.replace(/\s+/g, ' ').trim();
-  const linkStart = range.toString().replace(/\s+/g, ' ').length;
-  const linkEnd = linkStart + link.textContent.length;
-  const start = Math.max(full.lastIndexOf('. ', Math.max(0, linkStart - 1)), full.lastIndexOf('? ', Math.max(0, linkStart - 1)), full.lastIndexOf('! ', Math.max(0, linkStart - 1))) + 1;
-  const endings = [full.indexOf('. ', linkEnd), full.indexOf('? ', linkEnd), full.indexOf('! ', linkEnd)].filter((index) => index >= 0);
-  const end = endings.length ? Math.min(...endings) + 1 : full.length;
-  const sentence = full.slice(start, end).trim();
-  const relativeLinkStart = Math.max(0, linkStart - start);
-  return {
-    before: sentence.slice(0, relativeLinkStart),
-    label: link.textContent,
-    after: sentence.slice(relativeLinkStart + link.textContent.length)
-  };
+  return { label: link.textContent };
 }
 
 function articleHTML(note) {

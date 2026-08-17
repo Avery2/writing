@@ -22,7 +22,8 @@
   --text-primary: #f2f0ec;
   --text-secondary: #a5a19b;
   --text-tertiary: #918d87;
-  --accent-primary: #38618c;
+  /* The light-theme link blue is too dim against the dark paper. */
+  --accent-primary: #79a9d8;
   --accent-secondary: #96c5f7;
   --border-color: #383229;
   --header-bg: rgb(21 19 16 / .95);
